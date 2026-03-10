@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vocab Hub - Cyberpunk Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -14,7 +14,6 @@
             background-color: #020617; /* slate-950 */
             color: white;
             overflow: hidden;
-            touch-action: manipulation; /* 防止手機連撳兩下放大畫面 */
         }
 
         /* 3D Flip Styles */
@@ -68,14 +67,15 @@
 
         <!-- 1. Landing Page -->
         <div id="view-landing" class="view-section active flex-col items-center justify-center min-h-screen w-full max-w-5xl mx-auto space-y-8 md:space-y-12 py-10 px-4">
-            <div class="text-center space-y-3 mt-8 md:mt-0">
+            <div class="text-center space-y-2 md:space-y-3 mt-8 md:mt-0">
                 <div class="inline-flex items-center justify-center p-3 md:p-4 bg-slate-800/80 rounded-2xl mb-2 md:mb-4 border border-cyan-500/30 shadow-lg shadow-cyan-500/20 backdrop-blur-md">
                     <i data-lucide="gamepad-2" class="w-8 h-8 md:w-12 md:h-12 text-cyan-400"></i>
                 </div>
-                <h2 class="text-xl md:text-5xl font-black text-cyan-400 tracking-widest uppercase drop-shadow-md">Youth College</h2>
-                <h3 class="text-base md:text-2xl text-slate-300 font-bold mt-2 uppercase tracking-wide">Vocational English 2D</h3>
-                <h4 class="text-sm md:text-xl text-slate-400 font-bold tracking-wider">Integrated Assessment</h4>
-                <h1 class="text-4xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 mt-4 md:mt-6 drop-shadow-lg uppercase tracking-tight">Vocab Hub</h1>
+                <h2 class="text-2xl md:text-5xl font-black text-cyan-400 tracking-widest uppercase drop-shadow-md">Youth College</h2>
+                <h3 class="text-lg md:text-2xl text-slate-200 font-bold mt-2 uppercase tracking-wide">Vocational English 2D</h3>
+                <h4 class="text-base md:text-xl text-slate-300 font-bold uppercase tracking-wide">Workplace Writing II</h4>
+                <h5 class="text-sm md:text-lg text-slate-400 font-bold tracking-wider">Integrated Assessment</h5>
+                <h1 class="text-5xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 mt-4 md:mt-6 drop-shadow-lg uppercase tracking-tight">Vocab Hub</h1>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl">
@@ -177,7 +177,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-2 gap-2 md:gap-4 shrink-0 z-10 pb-4 md:pb-0" id="fw-options">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4 shrink-0 z-10 pb-4 md:pb-0" id="fw-options">
                 <!-- Options injected here -->
             </div>
         </div>
@@ -193,10 +193,8 @@
                 <div id="4c-score" class="font-black text-lg md:text-2xl text-purple-400 bg-slate-800/80 backdrop-blur-md border-2 border-purple-500/50 px-4 md:px-6 py-1 md:py-2 rounded-xl shadow-lg shadow-purple-500/20">SCORE: 0</div>
             </div>
 
-            <!-- 真正嘅 Four Corners 容器 -->
             <div class="flex-1 relative w-full h-full pb-6" id="4c-container">
                 
-                <!-- 中間嘅題目框 (Center Question Box) -->
                 <div id="4c-center-box" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 w-[85%] md:w-[50%] max-w-2xl bg-slate-800/95 backdrop-blur-xl px-4 py-8 md:px-8 md:py-12 rounded-3xl shadow-2xl text-center border-2 border-purple-500/80 shadow-purple-500/20 transition-colors flex flex-col items-center justify-center">
                     <span class="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-1 rounded-full text-xs md:text-sm font-black uppercase tracking-widest border-2 bg-slate-900 text-purple-300 border-purple-500/80 shadow-lg">
                         Collocation
@@ -209,13 +207,11 @@
                     </p>
                 </div>
 
-                <!-- 四個角落嘅選項 (Four Corners Options) -->
-                <button onclick="handle4CTap(0)" id="4c-btn-0" class="absolute top-0 left-0 rounded-br-3xl rounded-tl-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-sm sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20 leading-tight"></button>
-                <button onclick="handle4CTap(1)" id="4c-btn-1" class="absolute top-0 right-0 rounded-bl-3xl rounded-tr-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-sm sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20 leading-tight"></button>
-                <button onclick="handle4CTap(2)" id="4c-btn-2" class="absolute bottom-0 left-0 rounded-tr-3xl rounded-bl-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-sm sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20 leading-tight"></button>
-                <button onclick="handle4CTap(3)" id="4c-btn-3" class="absolute bottom-0 right-0 rounded-tl-3xl rounded-br-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-sm sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20 leading-tight"></button>
+                <button onclick="handle4CTap(0)" id="4c-btn-0" class="absolute top-0 left-0 rounded-br-3xl rounded-tl-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-base sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20"></button>
+                <button onclick="handle4CTap(1)" id="4c-btn-1" class="absolute top-0 right-0 rounded-bl-3xl rounded-tr-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-base sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20"></button>
+                <button onclick="handle4CTap(2)" id="4c-btn-2" class="absolute bottom-0 left-0 rounded-tr-3xl rounded-bl-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-base sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20"></button>
+                <button onclick="handle4CTap(3)" id="4c-btn-3" class="absolute bottom-0 right-0 rounded-tl-3xl rounded-br-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-base sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20"></button>
 
-                <!-- Feedback Icons -->
                 <div id="4c-correct-icon" class="absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-md z-40 rounded-3xl hidden">
                     <i data-lucide="check-circle-2" class="w-32 h-32 md:w-56 md:h-56 text-green-500 drop-shadow-lg"></i>
                 </div>
@@ -251,8 +247,7 @@
             { word: "coordination", pos: "Noun", meaning: "協調", collocation: "hand-eye ___" },
             { word: "delay", pos: "Noun", meaning: "延遲", collocation: "cause a ___" },
             { word: "difficulty", pos: "Noun", meaning: "困難", collocation: "experience ___" },
-            // UPDATED: "expense" meaning changed to "代價 / 費用"
-            { word: "expense", pos: "Noun", meaning: "代價 / 費用", collocation: "at the ___ of" },
+            { word: "expense", pos: "Noun", meaning: "開支 / 費用", collocation: "at the ___ of" },
             { word: "exposure", pos: "Noun", meaning: "暴露 / 接觸", collocation: "sun ___" },
             { word: "facility", pos: "Noun", meaning: "設施", collocation: "sports ___" },
             { word: "feedback", pos: "Noun", meaning: "反饋 / 意見", collocation: "give ___" },
@@ -293,7 +288,7 @@
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'en-US';
+                utterance.lang = 'en-UK';
                 utterance.rate = 0.85;
                 window.speechSynthesis.speak(utterance);
             }
@@ -385,6 +380,7 @@
         let fwCurrentWord = null;
         let fwOptions = [];
         let fwFallTimer = null;
+        let fwFallPosition = -20;
         let fwIsGameOver = false;
 
         function startFallingGame() {
@@ -402,8 +398,8 @@
             document.getElementById('fw-score').innerText = fwScore;
             let livesHtml = '';
             for(let i=0; i<3; i++) {
-                if(i < fwLives) livesHtml += `<i data-lucide="heart" class="w-5 h-5 md:w-8 md:h-8 text-emerald-500 fill-emerald-500 drop-shadow-md"></i>`;
-                else livesHtml += `<i data-lucide="heart" class="w-5 h-5 md:w-8 md:h-8 text-slate-700"></i>`;
+                if(i < fwLives) livesHtml += `<i data-lucide="heart" class="w-6 h-6 md:w-8 md:h-8 text-emerald-500 fill-emerald-500 drop-shadow-md"></i>`;
+                else livesHtml += `<i data-lucide="heart" class="w-6 h-6 md:w-8 md:h-8 text-slate-700"></i>`;
             }
             document.getElementById('fw-lives').innerHTML = livesHtml;
             lucide.createIcons();
@@ -424,7 +420,7 @@
             
             let optsHtml = '';
             fwOptions.forEach((opt, i) => {
-                optsHtml += `<button onclick="handleFwSelect('${opt}')" class="bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 rounded-2xl shadow-lg border-2 border-slate-600 hover:border-emerald-500/80 flex items-center justify-center p-3 md:p-6 text-center text-sm md:text-2xl font-black text-slate-100 active:bg-emerald-900 active:scale-95 transition-all min-h-[4rem] md:min-h-[6rem] leading-tight">${opt}</button>`;
+                optsHtml += `<button onclick="handleFwSelect('${opt}')" class="bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 rounded-2xl shadow-lg border-2 border-slate-600 hover:border-emerald-500/80 flex items-center justify-center p-4 md:p-6 text-center text-lg md:text-2xl font-black text-slate-100 active:bg-emerald-900 active:scale-95 transition-all min-h-[4rem] md:min-h-[6rem]">${opt}</button>`;
             });
             document.getElementById('fw-options').innerHTML = optsHtml;
 
