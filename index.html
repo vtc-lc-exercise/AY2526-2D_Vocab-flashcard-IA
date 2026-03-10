@@ -1,615 +1,601 @@
-<!DOCTYPE html>
-<html lang="en-GB">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vocabulary Flashcards</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BookOpen, Target, ArrowLeft, Volume2, CheckCircle2, XCircle, Zap, CloudRain, Heart, Gamepad2 } from 'lucide-react';
 
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
-            background-attachment: fixed;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
+// --- Vocabulary Data ---
+const rawVocabData = [
+  { word: "affect", pos: "Verb", meaning: "影響", collocation: "___ the outcome" },
+  { word: "collect", pos: "Verb", meaning: "收集", collocation: "___ data" },
+  { word: "demonstrate", pos: "Verb", meaning: "示範 / 證明", collocation: "___ how to use" },
+  { word: "gather", pos: "Verb", meaning: "聚集 / 收集", collocation: "___ information" },
+  { word: "improve", pos: "Verb", meaning: "改善", collocation: "___ performance" },
+  { word: "induce", pos: "Verb", meaning: "引起 / 導致", collocation: "___ sleep" },
+  { word: "obtain", pos: "Verb", meaning: "獲得", collocation: "___ permission" },
+  { word: "provide", pos: "Verb", meaning: "提供", collocation: "___ support" },
+  { word: "reduce", pos: "Verb", meaning: "減少", collocation: "___ stress" },
+  { word: "recharge", pos: "Verb", meaning: "充電", collocation: "___ the battery" },
+  { word: "require", pos: "Verb", meaning: "需要", collocation: "___ assistance" },
+  { word: "lower", pos: "Verb", meaning: "降低", collocation: "___ the temperature" },
+  { word: "battery", pos: "Noun", meaning: "電池", collocation: "charge the ___" },
+  { word: "concern", pos: "Noun", meaning: "關注 / 擔憂", collocation: "express ___" },
+  { word: "construction", pos: "Noun", meaning: "建設 / 建築", collocation: "under ___" },
+  { word: "coordination", pos: "Noun", meaning: "協調", collocation: "hand-eye ___" },
+  { word: "delay", pos: "Noun", meaning: "延遲", collocation: "cause a ___" },
+  { word: "difficulty", pos: "Noun", meaning: "困難", collocation: "experience ___" },
+  { word: "expense", pos: "Noun", meaning: "開支 / 費用", collocation: "at the ___ of" },
+  { word: "exposure", pos: "Noun", meaning: "暴露 / 接觸", collocation: "sun ___" },
+  { word: "facility", pos: "Noun", meaning: "設施", collocation: "sports ___" },
+  { word: "feedback", pos: "Noun", meaning: "反饋 / 意見", collocation: "give ___" },
+  { word: "implementation", pos: "Noun", meaning: "實施 / 執行", collocation: "___ of the plan" },
+  { word: "maintenance", pos: "Noun", meaning: "維修 / 保養", collocation: "regular ___" },
+  { word: "relief", pos: "Noun", meaning: "緩解 / 減輕", collocation: "pain ___" },
+  { word: "solution", pos: "Noun", meaning: "解決方案", collocation: "find a ___" },
+  { word: "supervision", pos: "Noun", meaning: "監督", collocation: "under adult ___" },
+  { word: "temperature", pos: "Noun", meaning: "溫度", collocation: "high ___" },
+  { word: "usage", pos: "Noun", meaning: "使用量", collocation: "water ___" },
+  { word: "additional", pos: "Adjective", meaning: "額外的", collocation: "___ information" },
+  { word: "applicable", pos: "Adjective", meaning: "適用的", collocation: "___ to everyone" },
+  { word: "effective in", pos: "Adjective", meaning: "在...有效", collocation: "___ reducing pain" },
+  { word: "frequent", pos: "Adjective", meaning: "頻繁的", collocation: "___ breaks" },
+  { word: "helpful in", pos: "Adjective", meaning: "在...有幫助", collocation: "___ solving problems" },
+  { word: "immediate", pos: "Adjective", meaning: "立即的", collocation: "___ action" },
+  { word: "initial", pos: "Adjective", meaning: "最初的", collocation: "___ stage" },
+  { word: "ongoing", pos: "Adjective", meaning: "進行中的", collocation: "___ process" },
+  { word: "significantly", pos: "Adverb", meaning: "顯著地", collocation: "improve ___" },
+  { word: "greatly", pos: "Adverb", meaning: "大大地", collocation: "___ appreciate" }
+];
 
-        /* Technical grid background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px),
-                linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 0;
-        }
+const posColors = {
+  Verb: "bg-red-500/20 text-red-400 border-red-500/50",
+  Noun: "bg-blue-500/20 text-blue-400 border-blue-500/50",
+  Adjective: "bg-emerald-500/20 text-emerald-400 border-emerald-500/50",
+  Adverb: "bg-amber-500/20 text-amber-400 border-amber-500/50"
+};
 
-        /* Engineering blueprint diagonal lines */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                repeating-linear-gradient(
-                    45deg,
-                    transparent,
-                    transparent 60px,
-                    rgba(255,255,255,0.05) 60px,
-                    rgba(255,255,255,0.05) 62px
-                );
-            pointer-events: none;
-            z-index: 0;
-        }
+const posTextColors = {
+  Verb: "text-red-400",
+  Noun: "text-blue-400",
+  Adjective: "text-emerald-400",
+  Adverb: "text-amber-400"
+};
 
-        /* SVG Engineering icons container */
-        .engineering-icons {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 0;
-        }
+// --- Animated Emoji Background ---
+const AnimatedBackground = () => {
+  const emojis = ['📚', '🎯', '💡', '🎓', '✨', '🚀', '📝', '🧠', '🧩', '🏆', '⭐', '🔥'];
+  const [elements, setElements] = useState([]);
 
-        .gear-svg {
-            position: absolute;
-            animation: rotate 20s linear infinite;
-        }
+  useEffect(() => {
+    // Generate random positions only on client side to avoid hydration mismatch
+    const newElements = [...Array(20)].map((_, i) => ({
+      id: i,
+      emoji: emojis[Math.floor(Math.random() * emojis.length)],
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      duration: Math.random() * 20 + 15,
+      delay: Math.random() * -20,
+    }));
+    setElements(newElements);
+  }, []);
 
-        .gear-1 { top: 10%; left: 8%; width: 100px; height: 100px; }
-        .gear-2 { top: 20%; right: 10%; width: 80px; height: 80px; animation-direction: reverse; }
-        .gear-3 { bottom: 15%; left: 12%; width: 90px; height: 90px; }
-        .gear-4 { bottom: 25%; right: 8%; width: 100px; height: 100px; animation-direction: reverse; }
-        .gear-5 { top: 55%; left: 5%; width: 70px; height: 70px; }
-        .gear-6 { top: 65%; right: 15%; width: 85px; height: 85px; animation-direction: reverse; }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .bolt-svg {
-            position: absolute;
-            opacity: 0.15;
-        }
-
-        .bolt-1 { top: 35%; left: 20%; width: 40px; height: 40px; }
-        .bolt-2 { bottom: 40%; right: 25%; width: 35px; height: 35px; }
-        .bolt-3 { top: 70%; left: 40%; width: 30px; height: 30px; }
-
-        .container {
-            text-align: center;
-            max-width: 650px;
-            width: 100%;
-            position: relative;
-            z-index: 10;
-        }
-
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            border-left: 6px solid #2a5298;
-            position: relative;
-            z-index: 10;
-        }
-
-        .header h1 {
-            color: #1e3c72;
-            font-size: 1.8em;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .header h2 {
-            color: #2a5298;
-            font-size: 1.3em;
-            margin-bottom: 5px;
-            font-weight: normal;
-        }
-
-        .header h3 {
-            color: #555;
-            font-size: 1.1em;
-            margin-bottom: 5px;
-            font-weight: normal;
-        }
-
-        .header h4 {
-            color: #666;
-            font-size: 0.95em;
-            font-weight: normal;
-        }
-
-        .flashcard-container {
-            perspective: 1000px;
-            margin-bottom: 30px;
-            position: relative;
-            z-index: 10;
-            height: 400px;
-        }
-
-        .flashcard {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s;
-            cursor: pointer;
-        }
-
-        .flashcard.flipped {
-            transform: rotateY(180deg);
-        }
-
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border: 3px solid rgba(255,255,255,0.2);
-            overflow: hidden;
-        }
-
-        .card-front {
-            background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%);
-            z-index: 2;
-        }
-
-        .card-back {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            transform: rotateY(180deg);
-            z-index: 1;
-        }
-
-        .card-gear-bg {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            opacity: 0.04;
-            pointer-events: none;
-        }
-
-        .card-content {
-            position: relative;
-            z-index: 5;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .word {
-            font-size: 2.8em;
-            font-weight: bold;
-            color: #1e3c72;
-            margin-bottom: 20px;
-            text-transform: lowercase;
-        }
-
-        .part-of-speech {
-            font-size: 1.3em;
-            color: #2a5298;
-            font-style: italic;
-            margin-bottom: 25px;
-            background: rgba(42, 82, 152, 0.1);
-            padding: 8px 20px;
-            border-radius: 20px;
-        }
-
-        .translation {
-            font-size: 2.2em;
-            color: #1e3c72;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        .meaning {
-            font-size: 1.15em;
-            color: #555;
-            line-height: 1.7;
-            max-width: 90%;
-        }
-
-        .audio-btn {
-            background: #2a5298;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 1.8em;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            position: relative;
-            z-index: 10;
-        }
-
-        .audio-btn:hover {
-            background: #1e3c72;
-            transform: scale(1.1);
-        }
-
-        .audio-btn:active {
-            transform: scale(0.95);
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            position: relative;
-            z-index: 10;
-        }
-
-        button:not(.audio-btn) {
-            padding: 12px 30px;
-            font-size: 1.1em;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
-        .btn-prev, .btn-next {
-            background: white;
-            color: #1e3c72;
-        }
-
-        .btn-prev:hover, .btn-next:hover {
-            background: #f0f4f8;
-            transform: translateY(-2px);
-        }
-
-        .btn-flip {
-            background: #2a5298;
-            color: white;
-        }
-
-        .btn-flip:hover {
-            background: #1e3c72;
-            transform: translateY(-2px);
-        }
-
-        .counter {
-            color: white;
-            font-size: 1.2em;
-            margin-top: 10px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 10;
-        }
-
-        .instruction {
-            color: white;
-            font-size: 0.9em;
-            margin-top: 10px;
-            opacity: 0.9;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 10;
-        }
-
-        @media (max-width: 600px) {
-            .header h1 { font-size: 1.4em; }
-            .header h2 { font-size: 1.1em; }
-            .header h3, .header h4 { font-size: 0.9em; }
-            .word { font-size: 2.2em; }
-            .translation { font-size: 1.8em; }
-            .gear-svg { width: 50px !important; height: 50px !important; }
-            .flashcard-container { height: 350px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="engineering-icons">
-        <!-- Gear 1 -->
-        <svg class="gear-svg gear-1" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="25" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="3"/>
-            <circle cx="50" cy="50" r="15" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
-            <rect x="47" y="10" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="47" y="75" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="10" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-            <rect x="75" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-            <rect x="20" y="20" width="6" height="12" fill="rgba(255,255,255,0.2)" transform="rotate(45 23 26)"/>
-            <rect x="74" y="20" width="6" height="12" fill="rgba(255,255,255,0.2)" transform="rotate(-45 77 26)"/>
-            <rect x="20" y="68" width="6" height="12" fill="rgba(255,255,255,0.2)" transform="rotate(-45 23 74)"/>
-            <rect x="74" y="68" width="6" height="12" fill="rgba(255,255,255,0.2)" transform="rotate(45 77 74)"/>
-        </svg>
-
-        <!-- Gear 2 -->
-        <svg class="gear-svg gear-2" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="25" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="3"/>
-            <circle cx="50" cy="50" r="15" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
-            <rect x="47" y="10" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="47" y="75" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="10" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-            <rect x="75" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-        </svg>
-
-        <!-- Gear 3 -->
-        <svg class="gear-svg gear-3" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="25" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="3"/>
-            <circle cx="50" cy="50" r="15" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
-            <rect x="47" y="10" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="47" y="75" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="10" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-            <rect x="75" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-            <rect x="20" y="20" width="6" height="12" fill="rgba(255,255,255,0.2)" transform="rotate(45 23 26)"/>
-            <rect x="74" y="20" width="6" height="12" fill="rgba(255,255,255,0.2)" transform="rotate(-45 77 26)"/>
-        </svg>
-
-        <!-- Gear 4 -->
-        <svg class="gear-svg gear-4" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="25" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="3"/>
-            <circle cx="50" cy="50" r="15" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
-            <rect x="47" y="10" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="47" y="75" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="10" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-            <rect x="75" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-        </svg>
-
-        <!-- Gear 5 -->
-        <svg class="gear-svg gear-5" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="25" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="3"/>
-            <circle cx="50" cy="50" r="15" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
-            <rect x="47" y="10" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="47" y="75" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="10" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-            <rect x="75" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-        </svg>
-
-        <!-- Gear 6 -->
-        <svg class="gear-svg gear-6" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="25" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="3"/>
-            <circle cx="50" cy="50" r="15" fill="rgba(255,255,255,0.2)" stroke-width="2"/>
-            <rect x="47" y="10" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="47" y="75" width="6" height="15" fill="rgba(255,255,255,0.2)"/>
-            <rect x="10" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-            <rect x="75" y="47" width="15" height="6" fill="rgba(255,255,255,0.2)"/>
-        </svg>
-
-        <!-- Bolt icons -->
-        <svg class="bolt-svg bolt-1" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
-            <polygon points="50,20 40,45 55,45 45,80 60,50 47,50" fill="rgba(255,255,255,0.2)"/>
-        </svg>
-
-        <svg class="bolt-svg bolt-2" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
-            <polygon points="50,20 40,45 55,45 45,80 60,50 47,50" fill="rgba(255,255,255,0.2)"/>
-        </svg>
-
-        <svg class="bolt-svg bolt-3" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
-            <polygon points="50,20 40,45 55,45 45,80 60,50 47,50" fill="rgba(255,255,255,0.2)"/>
-        </svg>
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+      {elements.map((el) => (
+        <motion.div
+          key={el.id}
+          className="absolute text-2xl md:text-4xl opacity-10"
+          style={{ left: el.left, top: el.top }}
+          animate={{
+            y: [0, -100, 0],
+            x: [0, 50, 0],
+            rotate: [0, 10, -10, 0],
+            opacity: [0.05, 0.15, 0.05]
+          }}
+          transition={{
+            duration: el.duration,
+            delay: el.delay,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        >
+          {el.emoji}
+        </motion.div>
+      ))}
     </div>
+  );
+};
 
-    <div class="container">
-        <div class="header">
-            <h1>Youth College</h1>
-            <h2>Language Centre</h2>
-            <h3>Vocational English 2D: Workplace Writing II</h3>
-            <h4>Vocabulary Building for Integrated Assessment AY2526</h4>
-        </div>
+// --- Page Transition Variants ---
+const pageVariants = {
+  initial: { opacity: 0, scale: 0.95, y: 10 },
+  animate: { opacity: 1, scale: 1, y: 0 },
+  exit: { opacity: 0, scale: 1.05, y: -10 }
+};
+const pageTransition = { type: "tween", ease: "anticipate", duration: 0.4 };
 
-        <div class="flashcard-container">
-            <div class="flashcard" id="flashcard" onclick="flipCard()">
-                <div class="card-face card-front">
-                    <svg class="card-gear-bg" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="35" fill="none" stroke="rgba(42,82,152,0.08)" stroke-width="4"/>
-                        <circle cx="50" cy="50" r="20" fill="none" stroke="rgba(42,82,152,0.08)" stroke-width="3"/>
-                        <rect x="47" y="5" width="6" height="20" fill="rgba(42,82,152,0.08)"/>
-                        <rect x="47" y="75" width="6" height="20" fill="rgba(42,82,152,0.08)"/>
-                        <rect x="5" y="47" width="20" height="6" fill="rgba(42,82,152,0.08)"/>
-                        <rect x="75" y="47" width="20" height="6" fill="rgba(42,82,152,0.08)"/>
-                    </svg>
-                    <div class="card-content">
-                        <div class="word" id="word"></div>
-                        <div class="part-of-speech" id="pos"></div>
-                        <button class="audio-btn" onclick="playAudio(event)" title="Play pronunciation (British English)">🔊</button>
-                    </div>
-                </div>
-                <div class="card-face card-back">
-                    <svg class="card-gear-bg" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="35" fill="none" stroke="rgba(42,82,152,0.08)" stroke-width="4"/>
-                        <circle cx="50" cy="50" r="20" fill="none" stroke="rgba(42,82,152,0.08)" stroke-width="3"/>
-                        <rect x="47" y="5" width="6" height="20" fill="rgba(42,82,152,0.08)"/>
-                        <rect x="47" y="75" width="6" height="20" fill="rgba(42,82,152,0.08)"/>
-                        <rect x="5" y="47" width="20" height="6" fill="rgba(42,82,152,0.08)"/>
-                        <rect x="75" y="47" width="20" height="6" fill="rgba(42,82,152,0.08)"/>
-                    </svg>
-                    <div class="card-content">
-                        <div class="translation" id="translation"></div>
-                        <div class="meaning" id="meaning"></div>
-                        <button class="audio-btn" onclick="playAudio(event)" title="Play meaning (British English)">🔊</button>
-                    </div>
-                </div>
+export default function VocabApp() {
+  const [currentView, setCurrentView] = useState('landing');
+
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+    }
+  }, []);
+
+  const playAudio = (text, e) => {
+    if (e) e.stopPropagation();
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.85; 
+      
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(v => 
+        v.name.includes('Google US English') || 
+        v.name.includes('Samantha') || 
+        v.name.includes('Microsoft Zira') ||
+        v.name.includes('Premium')
+      );
+      
+      if (preferredVoice) utterance.voice = preferredVoice;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const BackButton = () => (
+    <button 
+      onClick={() => setCurrentView('landing')}
+      className="flex items-center text-slate-400 hover:text-cyan-400 mb-4 transition-colors bg-slate-800/80 px-4 py-2 rounded-full w-max backdrop-blur-md z-50 relative border border-slate-700 shadow-lg shadow-black/20 font-bold text-sm md:text-base"
+    >
+      <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 mr-2" /> BACK TO MENU
+    </button>
+  );
+
+  // --- 1. Landing Page ---
+  const LandingPage = () => (
+    <motion.div 
+      variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}
+      className="flex flex-col items-center justify-center min-h-screen w-full max-w-5xl mx-auto space-y-8 md:space-y-12 py-10 px-4 relative z-10"
+    >
+      <div className="text-center space-y-3 mt-8 md:mt-0">
+        <motion.div 
+          initial={{ scale: 0.9 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.5 }}
+          className="inline-flex items-center justify-center p-3 md:p-4 bg-slate-800/80 rounded-2xl mb-2 md:mb-4 border border-cyan-500/30 shadow-lg shadow-cyan-500/20 backdrop-blur-md"
+        >
+          <Gamepad2 className="w-8 h-8 md:w-12 md:h-12 text-cyan-400" />
+        </motion.div>
+        <h2 className="text-2xl md:text-5xl font-black text-cyan-400 tracking-widest uppercase drop-shadow-md">
+          Youth College
+        </h2>
+        <h3 className="text-lg md:text-2xl text-slate-300 font-bold mt-2 uppercase tracking-wide">
+          Vocational English 2D
+        </h3>
+        <h4 className="text-base md:text-xl text-slate-400 font-bold tracking-wider">
+          Integrated Assessment
+        </h4>
+        <h1 className="text-5xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 mt-4 md:mt-6 drop-shadow-lg uppercase tracking-tight">
+          Vocab Hub
+        </h1>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl">
+        <button 
+          onClick={() => setCurrentView('flashcard')} 
+          className="group relative overflow-hidden bg-slate-800/80 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-cyan-500/30 active:scale-95 transition-all text-left border-2 border-slate-700 hover:border-cyan-500 flex flex-col justify-center"
+        >
+          <div className="flex items-center mb-2 md:mb-3">
+            <div className="bg-slate-900 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-cyan-400 border border-slate-700 group-hover:bg-cyan-500/20 transition-colors mr-3 md:mr-4 shrink-0">
+              <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
             </div>
+            <h2 className="text-xl md:text-3xl font-black text-slate-100 uppercase tracking-wide">Flash Cards</h2>
+          </div>
+          <p className="text-slate-400 text-sm md:text-base font-bold ml-14 md:ml-16">Learn pronunciation and meanings.</p>
+        </button>
+
+        <button 
+          onClick={() => setCurrentView('falling')} 
+          className="group relative overflow-hidden bg-slate-800/80 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-emerald-500/30 active:scale-95 transition-all text-left border-2 border-slate-700 hover:border-emerald-500 flex flex-col justify-center"
+        >
+          <div className="flex items-center mb-2 md:mb-3">
+            <div className="bg-slate-900 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-emerald-400 border border-slate-700 group-hover:bg-emerald-500/20 transition-colors mr-3 md:mr-4 shrink-0">
+              <CloudRain className="w-5 h-5 md:w-6 md:h-6" />
+            </div>
+            <h2 className="text-xl md:text-3xl font-black text-slate-100 uppercase tracking-wide">Falling Words</h2>
+          </div>
+          <p className="text-slate-400 text-sm md:text-base font-bold ml-14 md:ml-16">Catch the correct meaning in time.</p>
+        </button>
+
+        <button 
+          onClick={() => setCurrentView('corners')} 
+          className="group relative overflow-hidden bg-slate-800/80 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-purple-500/30 active:scale-95 transition-all text-left border-2 border-slate-700 hover:border-purple-500 flex flex-col justify-center"
+        >
+          <div className="flex items-center mb-2 md:mb-3">
+            <div className="bg-slate-900 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-purple-400 border border-slate-700 group-hover:bg-purple-500/20 transition-colors mr-3 md:mr-4 shrink-0">
+              <Target className="w-5 h-5 md:w-6 md:h-6" />
+            </div>
+            <h2 className="text-xl md:text-3xl font-black text-slate-100 uppercase tracking-wide">Four Corners</h2>
+          </div>
+          <p className="text-slate-400 text-sm md:text-base font-bold ml-14 md:ml-16">Guess the meaning of the phrase.</p>
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  // --- 2. Flashcard View ---
+  const FlashcardView = () => {
+    const [index, setIndex] = useState(0);
+    const [isFlipped, setIsFlipped] = useState(false);
+    const currentWord = rawVocabData[index];
+
+    useEffect(() => {
+      if (!isFlipped) playAudio(currentWord.word);
+    }, [index]);
+
+    const handleFlip = () => {
+      const newFlippedState = !isFlipped;
+      setIsFlipped(newFlippedState);
+      if (newFlippedState) {
+        playAudio(currentWord.collocation.replace('___', currentWord.word));
+      } else {
+        playAudio(currentWord.word);
+      }
+    };
+
+    return (
+      <motion.div 
+        variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}
+        className="flex flex-col h-screen w-full max-w-4xl mx-auto px-4 py-4 md:py-6 relative z-10"
+      >
+        <BackButton />
+        <div className="flex-1 flex flex-col items-center justify-center w-full pb-10">
+          <div className="text-cyan-400 mb-4 md:mb-6 font-black text-lg md:text-xl tracking-widest bg-slate-800/80 backdrop-blur-md px-4 md:px-6 py-2 rounded-full border border-slate-700 shadow-lg">
+            {index + 1} / {rawVocabData.length}
+          </div>
+          
+          <div className="relative w-full max-w-2xl h-80 md:h-96 perspective-1000">
+            <motion.div 
+              className="w-full h-full relative preserve-3d cursor-pointer"
+              onClick={handleFlip}
+              animate={{ rotateX: isFlipped ? 180 : 0 }}
+              transition={{ duration: 0.6, type: "spring", stiffness: 200, damping: 20 }}
+            >
+              {/* Front */}
+              <div className="absolute inset-0 backface-hidden bg-slate-800/90 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col items-center justify-center border-2 border-slate-600 hover:border-cyan-500/80 transition-colors">
+                <span className={`absolute top-4 left-4 md:top-6 md:left-6 px-3 py-1 rounded-full text-xs md:text-sm font-black uppercase tracking-wider border-2 ${posColors[currentWord.pos]}`}>
+                  {currentWord.pos}
+                </span>
+                <button 
+                  onClick={(e) => playAudio(currentWord.word, e)}
+                  className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 bg-slate-700 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-400 rounded-full transition-colors border border-slate-600"
+                >
+                  <Volume2 className="w-5 h-5 md:w-6 md:h-6" />
+                </button>
+                <h2 className="text-4xl md:text-7xl font-black text-slate-100 text-center tracking-wide drop-shadow-md break-words w-full px-4">
+                  {currentWord.word}
+                </h2>
+                <p className="text-cyan-500 mt-6 md:mt-10 text-xs md:text-base font-bold uppercase tracking-widest flex items-center bg-cyan-900/30 px-3 md:px-4 py-2 rounded-full">
+                  <Zap className="w-4 h-4 md:w-5 md:h-5 mr-2" /> Click to flip
+                </p>
+              </div>
+              {/* Back */}
+              <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-cyan-900/90 to-blue-900/90 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col items-center justify-center text-white rotate-x-180 border-2 border-cyan-500/80">
+                <span className="absolute top-4 left-4 md:top-6 md:left-6 px-3 py-1 rounded-full text-xs md:text-sm font-black uppercase tracking-wider bg-black/30 text-cyan-300 border-2 border-cyan-500/30">
+                  {currentWord.pos}
+                </span>
+                <button 
+                  onClick={(e) => playAudio(currentWord.collocation.replace('___', currentWord.word), e)}
+                  className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 bg-black/30 hover:bg-cyan-500/30 text-cyan-300 rounded-full transition-colors border border-cyan-500/30"
+                >
+                  <Volume2 className="w-5 h-5 md:w-6 md:h-6" />
+                </button>
+                <h2 className="text-3xl md:text-5xl font-black text-center drop-shadow-lg mb-4 md:mb-6">
+                  {currentWord.meaning}
+                </h2>
+                <p className="text-lg md:text-3xl text-cyan-200 font-bold bg-black/40 px-4 md:px-8 py-3 md:py-4 rounded-2xl border border-cyan-500/30 shadow-inner text-center w-full">
+                  {currentWord.collocation.replace('___', currentWord.word)}
+                </p>
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="flex justify-between w-full max-w-2xl mt-6 md:mt-10 gap-3 md:gap-6">
+            <button 
+              onClick={() => { setIndex(Math.max(0, index - 1)); setIsFlipped(false); }} 
+              disabled={index === 0}
+              className="flex-1 py-4 md:py-5 bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-black text-base md:text-xl text-slate-300 transition-colors border-2 border-slate-600 shadow-lg uppercase tracking-wider"
+            >
+              PREV
+            </button>
+            <button 
+              onClick={() => { setIndex(Math.min(rawVocabData.length - 1, index + 1)); setIsFlipped(false); }} 
+              disabled={index === rawVocabData.length - 1}
+              className="flex-1 py-4 md:py-5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-black text-base md:text-xl text-white shadow-lg shadow-cyan-500/50 transition-all uppercase tracking-wider"
+            >
+              NEXT
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // --- 3. Falling Words ---
+  const FallingWordsView = () => {
+    const [score, setScore] = useState(0);
+    const [lives, setLives] = useState(3);
+    const [isGameOver, setIsGameOver] = useState(false);
+    const [currentWord, setCurrentWord] = useState(null);
+    const [options, setOptions] = useState([]);
+    const [gameKey, setGameKey] = useState(0);
+    const [isShaking, setIsShaking] = useState(false);
+
+    const generateNextWord = () => {
+      const randomWord = rawVocabData[Math.floor(Math.random() * rawVocabData.length)];
+      const opts = new Set([randomWord.meaning]);
+      while(opts.size < 4) {
+        opts.add(rawVocabData[Math.floor(Math.random() * rawVocabData.length)].meaning);
+      }
+      setCurrentWord(randomWord);
+      setOptions(Array.from(opts).sort(() => Math.random() - 0.5));
+      setGameKey(prev => prev + 1);
+    };
+
+    useEffect(() => { generateNextWord(); }, []);
+
+    const triggerWrongEffect = () => {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 400);
+    };
+
+    const handleSelect = (meaning) => {
+      if (isGameOver) return;
+      if (meaning === currentWord.meaning) {
+        setScore(s => s + 10);
+        playAudio(currentWord.word, null);
+        generateNextWord();
+      } else {
+        triggerWrongEffect();
+        setLives(l => l - 1);
+        if (lives - 1 <= 0) setIsGameOver(true);
+        else generateNextWord();
+      }
+    };
+
+    const handleMiss = () => {
+      if (isGameOver) return;
+      triggerWrongEffect();
+      setLives(l => l - 1);
+      if (lives - 1 <= 0) setIsGameOver(true);
+      else generateNextWord();
+    };
+
+    const restartGame = () => {
+      setScore(0);
+      setLives(3);
+      setIsGameOver(false);
+      generateNextWord();
+    };
+
+    const fallDuration = Math.max(2.5, 6 - Math.floor(score / 30) * 0.5);
+
+    return (
+      <motion.div 
+        variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}
+        className="flex flex-col h-screen w-full max-w-4xl mx-auto px-4 py-4 md:py-6 relative z-10"
+      >
+        <AnimatePresence>
+          {isShaking && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-red-600/20 z-50 pointer-events-none rounded-3xl"
+            />
+          )}
+        </AnimatePresence>
+
+        <div className="flex justify-between items-center mb-2 md:mb-4 z-10">
+          <BackButton />
+          <div className="flex items-center space-x-3 md:space-x-6">
+            <div className="flex space-x-1 md:space-x-2">
+              {[...Array(3)].map((_, i) => (
+                <Heart key={i} className={`w-6 h-6 md:w-8 md:h-8 ${i < lives ? 'text-emerald-500 fill-emerald-500 drop-shadow-md' : 'text-slate-700'}`} />
+              ))}
+            </div>
+            <div className="font-black text-lg md:text-2xl text-emerald-400 bg-slate-800/80 backdrop-blur-md border-2 border-emerald-500/50 px-3 md:px-6 py-1 md:py-2 rounded-xl shadow-lg shadow-emerald-500/20">
+              {score}
+            </div>
+          </div>
         </div>
 
-        <div class="controls">
-            <button class="btn-prev" onclick="previousCard()">← Previous</button>
-            <button class="btn-flip" onclick="flipCard()">Flip Card</button>
-            <button class="btn-next" onclick="nextCard()">Next →</button>
+        <div className="flex-1 relative bg-slate-900/60 backdrop-blur-sm rounded-3xl border-2 border-slate-700 overflow-hidden mb-3 md:mb-4 shadow-inner">
+          {!isGameOver && currentWord && (
+            <motion.div
+              key={gameKey}
+              initial={{ top: "-20%" }}
+              animate={{ top: "100%" }}
+              transition={{ duration: fallDuration, ease: "linear" }}
+              onAnimationComplete={handleMiss}
+              className="absolute left-0 right-0 mx-auto w-11/12 md:w-max bg-slate-800/90 backdrop-blur-md px-6 md:px-10 py-4 md:py-5 rounded-2xl shadow-lg shadow-emerald-500/40 text-3xl md:text-6xl font-black text-emerald-400 border-2 border-emerald-500/80 z-10 text-center break-words"
+            >
+              {currentWord.word}
+            </motion.div>
+          )}
+
+          <AnimatePresence>
+            {isGameOver && (
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-20 flex flex-col items-center justify-center text-white px-4 text-center"
+              >
+                <h2 className="text-5xl md:text-7xl font-black mb-2 md:mb-4 text-red-500 drop-shadow-lg">GAME OVER</h2>
+                <p className="text-2xl md:text-4xl mb-8 md:mb-10 text-slate-300 font-bold">Score: <span className="text-emerald-400 font-black">{score}</span></p>
+                <button 
+                  onClick={restartGame}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 md:px-12 py-4 md:py-5 rounded-2xl font-black text-xl md:text-3xl shadow-lg shadow-emerald-500/50 transition-transform active:scale-95 uppercase tracking-wider w-full max-w-xs"
+                >
+                  PLAY AGAIN
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        <div class="counter" id="counter"></div>
-        <div class="instruction">🔊 Front: word pronunciation | Back: meaning pronunciation</div>
+        {/* Mobile-friendly grid: 1 column on very small screens, 2 on medium */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4 shrink-0 z-10 pb-4 md:pb-0">
+          {options.map((opt, i) => (
+            <button 
+              key={i} onClick={() => handleSelect(opt)}
+              disabled={isGameOver}
+              className="bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 disabled:opacity-50 rounded-2xl shadow-lg border-2 border-slate-600 hover:border-emerald-500/80 flex items-center justify-center p-4 md:p-6 text-center text-lg md:text-2xl font-black text-slate-100 active:bg-emerald-900 active:scale-95 transition-all min-h-[4rem] md:min-h-[6rem]"
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      </motion.div>
+    );
+  };
+
+  // --- 4. Four Corners (Mobile Optimized) ---
+  const FourCornersView = () => {
+    const [gameData, setGameData] = useState([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [score, setScore] = useState(0);
+    const [feedback, setFeedback] = useState(null);
+
+    useEffect(() => {
+      const shuffledVocab = [...rawVocabData].sort(() => Math.random() - 0.5);
+      const generatedGameData = shuffledVocab.map(item => {
+        const options = new Set([item.meaning]);
+        while(options.size < 4) {
+          const randomItem = rawVocabData[Math.floor(Math.random() * rawVocabData.length)];
+          options.add(randomItem.meaning);
+        }
+        return { ...item, options: Array.from(options).sort(() => Math.random() - 0.5) };
+      });
+      setGameData(generatedGameData);
+    }, []);
+
+    if (gameData.length === 0) return null;
+    const currentItem = gameData[currentIndex];
+    const parts = currentItem.collocation.split('___');
+
+    const handleTap = (selectedMeaning) => {
+      if (selectedMeaning === currentItem.meaning) {
+        setFeedback('correct');
+        setScore(prev => prev + 10);
+        playAudio(currentItem.word, null);
+        setTimeout(() => {
+          setFeedback(null);
+          setCurrentIndex((prev) => (prev + 1) % gameData.length);
+        }, 800);
+      } else {
+        setFeedback('wrong');
+        setTimeout(() => setFeedback(null), 600);
+      }
+    };
+
+    return (
+      <motion.div 
+        variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}
+        className="flex flex-col h-screen w-full mx-auto px-4 py-4 md:py-6 relative overflow-hidden z-10 max-w-5xl"
+      >
+        <AnimatePresence>
+          {feedback === 'wrong' && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-red-600/30 z-40 pointer-events-none rounded-3xl"
+            />
+          )}
+        </AnimatePresence>
+
+        <div className="flex justify-between items-center mb-4 z-50 relative w-full">
+          <BackButton />
+          <div className="font-black text-lg md:text-2xl text-purple-400 bg-slate-800/80 backdrop-blur-md border-2 border-purple-500/50 px-4 md:px-6 py-1 md:py-2 rounded-xl shadow-lg shadow-purple-500/20">
+            SCORE: {score}
+          </div>
+        </div>
+
+        {/* Mobile Friendly Layout: Question on top, Options below */}
+        <div className="flex flex-col flex-1 gap-4 md:gap-6 relative w-full pb-6">
+          
+          {/* Question Box */}
+          <div className={`w-full bg-slate-800/90 backdrop-blur-xl px-6 py-8 md:py-12 rounded-3xl shadow-xl text-center border-2 ${feedback === 'wrong' ? 'border-red-500' : 'border-purple-500/80'} transition-colors shrink-0 relative flex flex-col items-center justify-center min-h-[30%]`}>
+            <span className="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-1 rounded-full text-xs md:text-sm font-black uppercase tracking-widest border-2 bg-slate-900 text-purple-300 border-purple-500/80">
+              Collocation
+            </span>
+            
+            <h3 className="text-2xl md:text-5xl font-black text-white tracking-wider drop-shadow-lg flex items-center justify-center flex-wrap gap-x-2 md:gap-x-4 leading-tight">
+              {parts[0] && <span>{parts[0]}</span>}
+              <span className={`${posTextColors[currentItem.pos]} underline decoration-4 underline-offset-4 md:underline-offset-8`}>
+                {currentItem.word}
+              </span>
+              {parts[1] && <span>{parts[1]}</span>}
+            </h3>
+            
+            <p className="text-purple-300 mt-6 md:mt-10 text-xs md:text-base uppercase tracking-widest font-black bg-purple-900/40 px-4 py-2 md:py-3 rounded-xl border border-purple-500/30 w-max max-w-full">
+              What does the highlighted word mean?
+            </p>
+          </div>
+
+          {/* Options Grid (1 col on mobile, 2 cols on tablet/desktop) */}
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 z-20">
+            {currentItem.options.map((opt, i) => (
+              <button 
+                key={i}
+                onClick={() => handleTap(opt)}
+                className="w-full h-full min-h-[4rem] md:min-h-[6rem] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 rounded-2xl md:rounded-3xl shadow-lg border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-4 md:p-6 text-center text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all"
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+
+          <AnimatePresence>
+            {feedback === 'correct' && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-md z-30 rounded-3xl"
+              >
+                <CheckCircle2 className="w-32 h-32 md:w-56 md:h-56 text-green-500 drop-shadow-lg" />
+              </motion.div>
+            )}
+            {feedback === 'wrong' && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 flex items-center justify-center bg-red-950/80 backdrop-blur-md z-30 rounded-3xl"
+              >
+                <XCircle className="w-32 h-32 md:w-56 md:h-56 text-red-500 drop-shadow-lg" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    );
+  };
+
+  return (
+    <div className="h-screen w-full bg-slate-950 font-sans overflow-hidden selection:bg-cyan-500/30 relative">
+      <AnimatedBackground />
+      
+      {/* Soft Glow Backgrounds using standard Tailwind classes */}
+      <div className="fixed top-0 left-0 w-full max-w-2xl aspect-square bg-cyan-600/10 rounded-full blur-3xl pointer-events-none z-0 -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="fixed bottom-0 right-0 w-full max-w-2xl aspect-square bg-purple-600/10 rounded-full blur-3xl pointer-events-none z-0 translate-x-1/4 translate-y-1/4"></div>
+      
+      <div className="relative z-10 h-full overflow-y-auto overflow-x-hidden">
+        <AnimatePresence mode="wait">
+          {currentView === 'landing' && <LandingPage key="landing" />}
+          {currentView === 'flashcard' && <FlashcardView key="flashcard" />}
+          {currentView === 'falling' && <FallingWordsView key="falling" />}
+          {currentView === 'corners' && <FourCornersView key="corners" />}
+        </AnimatePresence>
+      </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .perspective-1000 { perspective: 1000px; }
+        .preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-x-180 { transform: rotateX(180deg); }
+      `}} />
     </div>
-
-    <script>
-        const flashcards = [
-            // Nouns
-            {word: "battery", pos: "noun", chinese: "電池", meaning: "a device that stores electrical energy"},
-            {word: "concern", pos: "noun", chinese: "關注；擔憂", meaning: "worry or interest about something"},
-            {word: "construction", pos: "noun", chinese: "建造；施工", meaning: "the process of building something"},
-            {word: "coordination", pos: "noun", chinese: "協調；配合", meaning: "the organisation of different elements to work together"},
-            {word: "delay", pos: "noun", chinese: "延遲；耽擱", meaning: "a period of time when something is postponed"},
-            {word: "difficulty", pos: "noun", chinese: "困難", meaning: "a problem or obstacle"},
-            {word: "expense", pos: "noun", chinese: "費用；開支", meaning: "the cost or money spent on something"},
-            {word: "exposure", pos: "noun", chinese: "暴露；接觸", meaning: "contact with or experience of something"},
-            {word: "facility", pos: "noun", chinese: "設施；場所", meaning: "a place or equipment for a particular purpose"},
-            {word: "feedback", pos: "noun", chinese: "反饋；意見", meaning: "information about reactions to a product or performance"},
-            {word: "implementation", pos: "noun", chinese: "實施；執行", meaning: "the process of putting a plan into action"},
-            {word: "maintenance", pos: "noun", chinese: "維護；保養", meaning: "the process of keeping something in good condition"},
-            {word: "relief", pos: "noun", chinese: "減輕；緩解", meaning: "removal or reduction of pain or distress"},
-            {word: "solution", pos: "noun", chinese: "解決方案；溶液", meaning: "a way to solve a problem"},
-            {word: "supervision", pos: "noun", chinese: "監督；管理", meaning: "the action of overseeing workers or a process"},
-            {word: "temperature", pos: "noun", chinese: "溫度", meaning: "the degree of heat or coldness"},
-            {word: "usage", pos: "noun", chinese: "使用；用法", meaning: "the way something is used"},
-
-            // Verbs
-            {word: "affect", pos: "verb", chinese: "影響", meaning: "to have an effect on or make a difference to"},
-            {word: "collect", pos: "verb", chinese: "收集；聚集", meaning: "to gather things together"},
-            {word: "demonstrate", pos: "verb", chinese: "展示；證明", meaning: "to show or prove something clearly"},
-            {word: "gather", pos: "verb", chinese: "聚集；收集", meaning: "to come together or collect"},
-            {word: "improve", pos: "verb", chinese: "改善；提高", meaning: "to make or become better"},
-            {word: "induce", pos: "verb", chinese: "誘導；引起", meaning: "to cause or bring about"},
-            {word: "lower", pos: "verb", chinese: "降低；減少", meaning: "to reduce or make less"},
-            {word: "obtain", pos: "verb", chinese: "獲得；取得", meaning: "to get or acquire"},
-            {word: "provide", pos: "verb", chinese: "提供；供應", meaning: "to give or supply"},
-            {word: "recharge", pos: "verb", chinese: "充電；再充電", meaning: "to restore electrical energy to a battery or to restore energy or strength"},
-            {word: "reduce", pos: "verb", chinese: "減少；降低", meaning: "to make smaller or less in amount"},
-            {word: "require", pos: "verb", chinese: "需要；要求", meaning: "to need or demand"},
-
-            // Adjectives
-            {word: "additional", pos: "adjective", chinese: "額外的；附加的", meaning: "extra or supplementary"},
-            {word: "applicable", pos: "adjective", chinese: "適用的；可應用的", meaning: "relevant or suitable in a particular situation"},
-            {word: "effective", pos: "adjective", chinese: "有效的", meaning: "successful in producing a desired result"},
-            {word: "frequent", pos: "adjective", chinese: "頻繁的；經常的", meaning: "occurring often"},
-            {word: "helpful", pos: "adjective", chinese: "有幫助的；有用的", meaning: "useful or beneficial"},
-            {word: "immediate", pos: "adjective", chinese: "立即的；即時的", meaning: "happening without delay"},
-            {word: "initial", pos: "adjective", chinese: "最初的；開始的", meaning: "existing at the beginning"},
-            {word: "ongoing", pos: "adjective", chinese: "持續進行的", meaning: "continuing or in progress"},
-
-            // Adverbs
-            {word: "greatly", pos: "adverb", chinese: "大大地；非常", meaning: "to a large extent; very much"},
-            {word: "significantly", pos: "adverb", chinese: "顯著地；重要地", meaning: "in a sufficiently great or important way"}
-        ];
-
-        let currentCard = 0;
-        let isFlipped = false;
-        let currentUtterance = null;
-
-        function displayCard() {
-            const card = flashcards[currentCard];
-            document.getElementById('word').textContent = card.word;
-            document.getElementById('pos').textContent = card.pos;
-            document.getElementById('translation').textContent = card.chinese;
-            document.getElementById('meaning').textContent = card.meaning;
-            document.getElementById('counter').textContent = `Card ${currentCard + 1} of ${flashcards.length}`;
-
-            if (isFlipped) {
-                const flashcard = document.getElementById('flashcard');
-                flashcard.classList.remove('flipped');
-                isFlipped = false;
-            }
-
-            if (currentUtterance) {
-                window.speechSynthesis.cancel();
-            }
-        }
-
-        function flipCard() {
-            const flashcard = document.getElementById('flashcard');
-            flashcard.classList.toggle('flipped');
-            isFlipped = !isFlipped;
-        }
-
-        function playAudio(event) {
-            event.stopPropagation();
-            window.speechSynthesis.cancel();
-
-            const card = flashcards[currentCard];
-
-            // Check if card is flipped - if yes, pronounce the meaning; if no, pronounce the word
-            const textToSpeak = isFlipped ? card.meaning : card.word;
-
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = 'en-GB';
-            utterance.rate = isFlipped ? 0.85 : 0.8; // Slightly faster for longer sentences
-            utterance.pitch = 1;
-
-            const voices = window.speechSynthesis.getVoices();
-            const britishVoice = voices.find(voice => 
-                voice.lang === 'en-GB' || 
-                voice.lang.startsWith('en-GB') ||
-                voice.name.includes('UK') ||
-                voice.name.includes('British')
-            );
-
-            if (britishVoice) {
-                utterance.voice = britishVoice;
-            }
-
-            currentUtterance = utterance;
-            window.speechSynthesis.speak(utterance);
-        }
-
-        function nextCard() {
-            currentCard = (currentCard + 1) % flashcards.length;
-            displayCard();
-        }
-
-        function previousCard() {
-            currentCard = (currentCard - 1 + flashcards.length) % flashcards.length;
-            displayCard();
-        }
-
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'ArrowRight') {
-                nextCard();
-            } else if (event.key === 'ArrowLeft') {
-                previousCard();
-            } else if (event.key === ' ' || event.key === 'Enter') {
-                event.preventDefault();
-                flipCard();
-            }
-        });
-
-        window.speechSynthesis.onvoiceschanged = function() {};
-
-        displayCard();
-    </script>
-</body>
-</html>
+  );
+}
