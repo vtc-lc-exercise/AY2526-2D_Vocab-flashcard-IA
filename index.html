@@ -1,601 +1,553 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Target, ArrowLeft, Volume2, CheckCircle2, XCircle, Zap, CloudRain, Heart, Gamepad2 } from 'lucide-react';
-
-// --- Vocabulary Data ---
-const rawVocabData = [
-  { word: "affect", pos: "Verb", meaning: "影響", collocation: "___ the outcome" },
-  { word: "collect", pos: "Verb", meaning: "收集", collocation: "___ data" },
-  { word: "demonstrate", pos: "Verb", meaning: "示範 / 證明", collocation: "___ how to use" },
-  { word: "gather", pos: "Verb", meaning: "聚集 / 收集", collocation: "___ information" },
-  { word: "improve", pos: "Verb", meaning: "改善", collocation: "___ performance" },
-  { word: "induce", pos: "Verb", meaning: "引起 / 導致", collocation: "___ sleep" },
-  { word: "obtain", pos: "Verb", meaning: "獲得", collocation: "___ permission" },
-  { word: "provide", pos: "Verb", meaning: "提供", collocation: "___ support" },
-  { word: "reduce", pos: "Verb", meaning: "減少", collocation: "___ stress" },
-  { word: "recharge", pos: "Verb", meaning: "充電", collocation: "___ the battery" },
-  { word: "require", pos: "Verb", meaning: "需要", collocation: "___ assistance" },
-  { word: "lower", pos: "Verb", meaning: "降低", collocation: "___ the temperature" },
-  { word: "battery", pos: "Noun", meaning: "電池", collocation: "charge the ___" },
-  { word: "concern", pos: "Noun", meaning: "關注 / 擔憂", collocation: "express ___" },
-  { word: "construction", pos: "Noun", meaning: "建設 / 建築", collocation: "under ___" },
-  { word: "coordination", pos: "Noun", meaning: "協調", collocation: "hand-eye ___" },
-  { word: "delay", pos: "Noun", meaning: "延遲", collocation: "cause a ___" },
-  { word: "difficulty", pos: "Noun", meaning: "困難", collocation: "experience ___" },
-  { word: "expense", pos: "Noun", meaning: "開支 / 費用", collocation: "at the ___ of" },
-  { word: "exposure", pos: "Noun", meaning: "暴露 / 接觸", collocation: "sun ___" },
-  { word: "facility", pos: "Noun", meaning: "設施", collocation: "sports ___" },
-  { word: "feedback", pos: "Noun", meaning: "反饋 / 意見", collocation: "give ___" },
-  { word: "implementation", pos: "Noun", meaning: "實施 / 執行", collocation: "___ of the plan" },
-  { word: "maintenance", pos: "Noun", meaning: "維修 / 保養", collocation: "regular ___" },
-  { word: "relief", pos: "Noun", meaning: "緩解 / 減輕", collocation: "pain ___" },
-  { word: "solution", pos: "Noun", meaning: "解決方案", collocation: "find a ___" },
-  { word: "supervision", pos: "Noun", meaning: "監督", collocation: "under adult ___" },
-  { word: "temperature", pos: "Noun", meaning: "溫度", collocation: "high ___" },
-  { word: "usage", pos: "Noun", meaning: "使用量", collocation: "water ___" },
-  { word: "additional", pos: "Adjective", meaning: "額外的", collocation: "___ information" },
-  { word: "applicable", pos: "Adjective", meaning: "適用的", collocation: "___ to everyone" },
-  { word: "effective in", pos: "Adjective", meaning: "在...有效", collocation: "___ reducing pain" },
-  { word: "frequent", pos: "Adjective", meaning: "頻繁的", collocation: "___ breaks" },
-  { word: "helpful in", pos: "Adjective", meaning: "在...有幫助", collocation: "___ solving problems" },
-  { word: "immediate", pos: "Adjective", meaning: "立即的", collocation: "___ action" },
-  { word: "initial", pos: "Adjective", meaning: "最初的", collocation: "___ stage" },
-  { word: "ongoing", pos: "Adjective", meaning: "進行中的", collocation: "___ process" },
-  { word: "significantly", pos: "Adverb", meaning: "顯著地", collocation: "improve ___" },
-  { word: "greatly", pos: "Adverb", meaning: "大大地", collocation: "___ appreciate" }
-];
-
-const posColors = {
-  Verb: "bg-red-500/20 text-red-400 border-red-500/50",
-  Noun: "bg-blue-500/20 text-blue-400 border-blue-500/50",
-  Adjective: "bg-emerald-500/20 text-emerald-400 border-emerald-500/50",
-  Adverb: "bg-amber-500/20 text-amber-400 border-amber-500/50"
-};
-
-const posTextColors = {
-  Verb: "text-red-400",
-  Noun: "text-blue-400",
-  Adjective: "text-emerald-400",
-  Adverb: "text-amber-400"
-};
-
-// --- Animated Emoji Background ---
-const AnimatedBackground = () => {
-  const emojis = ['📚', '🎯', '💡', '🎓', '✨', '🚀', '📝', '🧠', '🧩', '🏆', '⭐', '🔥'];
-  const [elements, setElements] = useState([]);
-
-  useEffect(() => {
-    // Generate random positions only on client side to avoid hydration mismatch
-    const newElements = [...Array(20)].map((_, i) => ({
-      id: i,
-      emoji: emojis[Math.floor(Math.random() * emojis.length)],
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      duration: Math.random() * 20 + 15,
-      delay: Math.random() * -20,
-    }));
-    setElements(newElements);
-  }, []);
-
-  return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {elements.map((el) => (
-        <motion.div
-          key={el.id}
-          className="absolute text-2xl md:text-4xl opacity-10"
-          style={{ left: el.left, top: el.top }}
-          animate={{
-            y: [0, -100, 0],
-            x: [0, 50, 0],
-            rotate: [0, 10, -10, 0],
-            opacity: [0.05, 0.15, 0.05]
-          }}
-          transition={{
-            duration: el.duration,
-            delay: el.delay,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        >
-          {el.emoji}
-        </motion.div>
-      ))}
-    </div>
-  );
-};
-
-// --- Page Transition Variants ---
-const pageVariants = {
-  initial: { opacity: 0, scale: 0.95, y: 10 },
-  animate: { opacity: 1, scale: 1, y: 0 },
-  exit: { opacity: 0, scale: 1.05, y: -10 }
-};
-const pageTransition = { type: "tween", ease: "anticipate", duration: 0.4 };
-
-export default function VocabApp() {
-  const [currentView, setCurrentView] = useState('landing');
-
-  useEffect(() => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.getVoices();
-    }
-  }, []);
-
-  const playAudio = (text, e) => {
-    if (e) e.stopPropagation();
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.85; 
-      
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(v => 
-        v.name.includes('Google US English') || 
-        v.name.includes('Samantha') || 
-        v.name.includes('Microsoft Zira') ||
-        v.name.includes('Premium')
-      );
-      
-      if (preferredVoice) utterance.voice = preferredVoice;
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  const BackButton = () => (
-    <button 
-      onClick={() => setCurrentView('landing')}
-      className="flex items-center text-slate-400 hover:text-cyan-400 mb-4 transition-colors bg-slate-800/80 px-4 py-2 rounded-full w-max backdrop-blur-md z-50 relative border border-slate-700 shadow-lg shadow-black/20 font-bold text-sm md:text-base"
-    >
-      <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 mr-2" /> BACK TO MENU
-    </button>
-  );
-
-  // --- 1. Landing Page ---
-  const LandingPage = () => (
-    <motion.div 
-      variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}
-      className="flex flex-col items-center justify-center min-h-screen w-full max-w-5xl mx-auto space-y-8 md:space-y-12 py-10 px-4 relative z-10"
-    >
-      <div className="text-center space-y-3 mt-8 md:mt-0">
-        <motion.div 
-          initial={{ scale: 0.9 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.5 }}
-          className="inline-flex items-center justify-center p-3 md:p-4 bg-slate-800/80 rounded-2xl mb-2 md:mb-4 border border-cyan-500/30 shadow-lg shadow-cyan-500/20 backdrop-blur-md"
-        >
-          <Gamepad2 className="w-8 h-8 md:w-12 md:h-12 text-cyan-400" />
-        </motion.div>
-        <h2 className="text-2xl md:text-5xl font-black text-cyan-400 tracking-widest uppercase drop-shadow-md">
-          Youth College
-        </h2>
-        <h3 className="text-lg md:text-2xl text-slate-300 font-bold mt-2 uppercase tracking-wide">
-          Vocational English 2D
-        </h3>
-        <h4 className="text-base md:text-xl text-slate-400 font-bold tracking-wider">
-          Integrated Assessment
-        </h4>
-        <h1 className="text-5xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 mt-4 md:mt-6 drop-shadow-lg uppercase tracking-tight">
-          Vocab Hub
-        </h1>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl">
-        <button 
-          onClick={() => setCurrentView('flashcard')} 
-          className="group relative overflow-hidden bg-slate-800/80 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-cyan-500/30 active:scale-95 transition-all text-left border-2 border-slate-700 hover:border-cyan-500 flex flex-col justify-center"
-        >
-          <div className="flex items-center mb-2 md:mb-3">
-            <div className="bg-slate-900 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-cyan-400 border border-slate-700 group-hover:bg-cyan-500/20 transition-colors mr-3 md:mr-4 shrink-0">
-              <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
-            </div>
-            <h2 className="text-xl md:text-3xl font-black text-slate-100 uppercase tracking-wide">Flash Cards</h2>
-          </div>
-          <p className="text-slate-400 text-sm md:text-base font-bold ml-14 md:ml-16">Learn pronunciation and meanings.</p>
-        </button>
-
-        <button 
-          onClick={() => setCurrentView('falling')} 
-          className="group relative overflow-hidden bg-slate-800/80 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-emerald-500/30 active:scale-95 transition-all text-left border-2 border-slate-700 hover:border-emerald-500 flex flex-col justify-center"
-        >
-          <div className="flex items-center mb-2 md:mb-3">
-            <div className="bg-slate-900 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-emerald-400 border border-slate-700 group-hover:bg-emerald-500/20 transition-colors mr-3 md:mr-4 shrink-0">
-              <CloudRain className="w-5 h-5 md:w-6 md:h-6" />
-            </div>
-            <h2 className="text-xl md:text-3xl font-black text-slate-100 uppercase tracking-wide">Falling Words</h2>
-          </div>
-          <p className="text-slate-400 text-sm md:text-base font-bold ml-14 md:ml-16">Catch the correct meaning in time.</p>
-        </button>
-
-        <button 
-          onClick={() => setCurrentView('corners')} 
-          className="group relative overflow-hidden bg-slate-800/80 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-purple-500/30 active:scale-95 transition-all text-left border-2 border-slate-700 hover:border-purple-500 flex flex-col justify-center"
-        >
-          <div className="flex items-center mb-2 md:mb-3">
-            <div className="bg-slate-900 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-purple-400 border border-slate-700 group-hover:bg-purple-500/20 transition-colors mr-3 md:mr-4 shrink-0">
-              <Target className="w-5 h-5 md:w-6 md:h-6" />
-            </div>
-            <h2 className="text-xl md:text-3xl font-black text-slate-100 uppercase tracking-wide">Four Corners</h2>
-          </div>
-          <p className="text-slate-400 text-sm md:text-base font-bold ml-14 md:ml-16">Guess the meaning of the phrase.</p>
-        </button>
-      </div>
-    </motion.div>
-  );
-
-  // --- 2. Flashcard View ---
-  const FlashcardView = () => {
-    const [index, setIndex] = useState(0);
-    const [isFlipped, setIsFlipped] = useState(false);
-    const currentWord = rawVocabData[index];
-
-    useEffect(() => {
-      if (!isFlipped) playAudio(currentWord.word);
-    }, [index]);
-
-    const handleFlip = () => {
-      const newFlippedState = !isFlipped;
-      setIsFlipped(newFlippedState);
-      if (newFlippedState) {
-        playAudio(currentWord.collocation.replace('___', currentWord.word));
-      } else {
-        playAudio(currentWord.word);
-      }
-    };
-
-    return (
-      <motion.div 
-        variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}
-        className="flex flex-col h-screen w-full max-w-4xl mx-auto px-4 py-4 md:py-6 relative z-10"
-      >
-        <BackButton />
-        <div className="flex-1 flex flex-col items-center justify-center w-full pb-10">
-          <div className="text-cyan-400 mb-4 md:mb-6 font-black text-lg md:text-xl tracking-widest bg-slate-800/80 backdrop-blur-md px-4 md:px-6 py-2 rounded-full border border-slate-700 shadow-lg">
-            {index + 1} / {rawVocabData.length}
-          </div>
-          
-          <div className="relative w-full max-w-2xl h-80 md:h-96 perspective-1000">
-            <motion.div 
-              className="w-full h-full relative preserve-3d cursor-pointer"
-              onClick={handleFlip}
-              animate={{ rotateX: isFlipped ? 180 : 0 }}
-              transition={{ duration: 0.6, type: "spring", stiffness: 200, damping: 20 }}
-            >
-              {/* Front */}
-              <div className="absolute inset-0 backface-hidden bg-slate-800/90 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col items-center justify-center border-2 border-slate-600 hover:border-cyan-500/80 transition-colors">
-                <span className={`absolute top-4 left-4 md:top-6 md:left-6 px-3 py-1 rounded-full text-xs md:text-sm font-black uppercase tracking-wider border-2 ${posColors[currentWord.pos]}`}>
-                  {currentWord.pos}
-                </span>
-                <button 
-                  onClick={(e) => playAudio(currentWord.word, e)}
-                  className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 bg-slate-700 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-400 rounded-full transition-colors border border-slate-600"
-                >
-                  <Volume2 className="w-5 h-5 md:w-6 md:h-6" />
-                </button>
-                <h2 className="text-4xl md:text-7xl font-black text-slate-100 text-center tracking-wide drop-shadow-md break-words w-full px-4">
-                  {currentWord.word}
-                </h2>
-                <p className="text-cyan-500 mt-6 md:mt-10 text-xs md:text-base font-bold uppercase tracking-widest flex items-center bg-cyan-900/30 px-3 md:px-4 py-2 rounded-full">
-                  <Zap className="w-4 h-4 md:w-5 md:h-5 mr-2" /> Click to flip
-                </p>
-              </div>
-              {/* Back */}
-              <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-cyan-900/90 to-blue-900/90 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col items-center justify-center text-white rotate-x-180 border-2 border-cyan-500/80">
-                <span className="absolute top-4 left-4 md:top-6 md:left-6 px-3 py-1 rounded-full text-xs md:text-sm font-black uppercase tracking-wider bg-black/30 text-cyan-300 border-2 border-cyan-500/30">
-                  {currentWord.pos}
-                </span>
-                <button 
-                  onClick={(e) => playAudio(currentWord.collocation.replace('___', currentWord.word), e)}
-                  className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 bg-black/30 hover:bg-cyan-500/30 text-cyan-300 rounded-full transition-colors border border-cyan-500/30"
-                >
-                  <Volume2 className="w-5 h-5 md:w-6 md:h-6" />
-                </button>
-                <h2 className="text-3xl md:text-5xl font-black text-center drop-shadow-lg mb-4 md:mb-6">
-                  {currentWord.meaning}
-                </h2>
-                <p className="text-lg md:text-3xl text-cyan-200 font-bold bg-black/40 px-4 md:px-8 py-3 md:py-4 rounded-2xl border border-cyan-500/30 shadow-inner text-center w-full">
-                  {currentWord.collocation.replace('___', currentWord.word)}
-                </p>
-              </div>
-            </motion.div>
-          </div>
-
-          <div className="flex justify-between w-full max-w-2xl mt-6 md:mt-10 gap-3 md:gap-6">
-            <button 
-              onClick={() => { setIndex(Math.max(0, index - 1)); setIsFlipped(false); }} 
-              disabled={index === 0}
-              className="flex-1 py-4 md:py-5 bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-black text-base md:text-xl text-slate-300 transition-colors border-2 border-slate-600 shadow-lg uppercase tracking-wider"
-            >
-              PREV
-            </button>
-            <button 
-              onClick={() => { setIndex(Math.min(rawVocabData.length - 1, index + 1)); setIsFlipped(false); }} 
-              disabled={index === rawVocabData.length - 1}
-              className="flex-1 py-4 md:py-5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-black text-base md:text-xl text-white shadow-lg shadow-cyan-500/50 transition-all uppercase tracking-wider"
-            >
-              NEXT
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-
-  // --- 3. Falling Words ---
-  const FallingWordsView = () => {
-    const [score, setScore] = useState(0);
-    const [lives, setLives] = useState(3);
-    const [isGameOver, setIsGameOver] = useState(false);
-    const [currentWord, setCurrentWord] = useState(null);
-    const [options, setOptions] = useState([]);
-    const [gameKey, setGameKey] = useState(0);
-    const [isShaking, setIsShaking] = useState(false);
-
-    const generateNextWord = () => {
-      const randomWord = rawVocabData[Math.floor(Math.random() * rawVocabData.length)];
-      const opts = new Set([randomWord.meaning]);
-      while(opts.size < 4) {
-        opts.add(rawVocabData[Math.floor(Math.random() * rawVocabData.length)].meaning);
-      }
-      setCurrentWord(randomWord);
-      setOptions(Array.from(opts).sort(() => Math.random() - 0.5));
-      setGameKey(prev => prev + 1);
-    };
-
-    useEffect(() => { generateNextWord(); }, []);
-
-    const triggerWrongEffect = () => {
-      setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 400);
-    };
-
-    const handleSelect = (meaning) => {
-      if (isGameOver) return;
-      if (meaning === currentWord.meaning) {
-        setScore(s => s + 10);
-        playAudio(currentWord.word, null);
-        generateNextWord();
-      } else {
-        triggerWrongEffect();
-        setLives(l => l - 1);
-        if (lives - 1 <= 0) setIsGameOver(true);
-        else generateNextWord();
-      }
-    };
-
-    const handleMiss = () => {
-      if (isGameOver) return;
-      triggerWrongEffect();
-      setLives(l => l - 1);
-      if (lives - 1 <= 0) setIsGameOver(true);
-      else generateNextWord();
-    };
-
-    const restartGame = () => {
-      setScore(0);
-      setLives(3);
-      setIsGameOver(false);
-      generateNextWord();
-    };
-
-    const fallDuration = Math.max(2.5, 6 - Math.floor(score / 30) * 0.5);
-
-    return (
-      <motion.div 
-        variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}
-        className="flex flex-col h-screen w-full max-w-4xl mx-auto px-4 py-4 md:py-6 relative z-10"
-      >
-        <AnimatePresence>
-          {isShaking && (
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-red-600/20 z-50 pointer-events-none rounded-3xl"
-            />
-          )}
-        </AnimatePresence>
-
-        <div className="flex justify-between items-center mb-2 md:mb-4 z-10">
-          <BackButton />
-          <div className="flex items-center space-x-3 md:space-x-6">
-            <div className="flex space-x-1 md:space-x-2">
-              {[...Array(3)].map((_, i) => (
-                <Heart key={i} className={`w-6 h-6 md:w-8 md:h-8 ${i < lives ? 'text-emerald-500 fill-emerald-500 drop-shadow-md' : 'text-slate-700'}`} />
-              ))}
-            </div>
-            <div className="font-black text-lg md:text-2xl text-emerald-400 bg-slate-800/80 backdrop-blur-md border-2 border-emerald-500/50 px-3 md:px-6 py-1 md:py-2 rounded-xl shadow-lg shadow-emerald-500/20">
-              {score}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 relative bg-slate-900/60 backdrop-blur-sm rounded-3xl border-2 border-slate-700 overflow-hidden mb-3 md:mb-4 shadow-inner">
-          {!isGameOver && currentWord && (
-            <motion.div
-              key={gameKey}
-              initial={{ top: "-20%" }}
-              animate={{ top: "100%" }}
-              transition={{ duration: fallDuration, ease: "linear" }}
-              onAnimationComplete={handleMiss}
-              className="absolute left-0 right-0 mx-auto w-11/12 md:w-max bg-slate-800/90 backdrop-blur-md px-6 md:px-10 py-4 md:py-5 rounded-2xl shadow-lg shadow-emerald-500/40 text-3xl md:text-6xl font-black text-emerald-400 border-2 border-emerald-500/80 z-10 text-center break-words"
-            >
-              {currentWord.word}
-            </motion.div>
-          )}
-
-          <AnimatePresence>
-            {isGameOver && (
-              <motion.div 
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-20 flex flex-col items-center justify-center text-white px-4 text-center"
-              >
-                <h2 className="text-5xl md:text-7xl font-black mb-2 md:mb-4 text-red-500 drop-shadow-lg">GAME OVER</h2>
-                <p className="text-2xl md:text-4xl mb-8 md:mb-10 text-slate-300 font-bold">Score: <span className="text-emerald-400 font-black">{score}</span></p>
-                <button 
-                  onClick={restartGame}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 md:px-12 py-4 md:py-5 rounded-2xl font-black text-xl md:text-3xl shadow-lg shadow-emerald-500/50 transition-transform active:scale-95 uppercase tracking-wider w-full max-w-xs"
-                >
-                  PLAY AGAIN
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Mobile-friendly grid: 1 column on very small screens, 2 on medium */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4 shrink-0 z-10 pb-4 md:pb-0">
-          {options.map((opt, i) => (
-            <button 
-              key={i} onClick={() => handleSelect(opt)}
-              disabled={isGameOver}
-              className="bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 disabled:opacity-50 rounded-2xl shadow-lg border-2 border-slate-600 hover:border-emerald-500/80 flex items-center justify-center p-4 md:p-6 text-center text-lg md:text-2xl font-black text-slate-100 active:bg-emerald-900 active:scale-95 transition-all min-h-[4rem] md:min-h-[6rem]"
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-      </motion.div>
-    );
-  };
-
-  // --- 4. Four Corners (Mobile Optimized) ---
-  const FourCornersView = () => {
-    const [gameData, setGameData] = useState([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [score, setScore] = useState(0);
-    const [feedback, setFeedback] = useState(null);
-
-    useEffect(() => {
-      const shuffledVocab = [...rawVocabData].sort(() => Math.random() - 0.5);
-      const generatedGameData = shuffledVocab.map(item => {
-        const options = new Set([item.meaning]);
-        while(options.size < 4) {
-          const randomItem = rawVocabData[Math.floor(Math.random() * rawVocabData.length)];
-          options.add(randomItem.meaning);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vocab Hub - Cyberpunk Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617; /* slate-950 */
+            color: white;
+            overflow: hidden;
+            touch-action: manipulation; /* 防止手機連撳兩下放大畫面 */
         }
-        return { ...item, options: Array.from(options).sort(() => Math.random() - 0.5) };
-      });
-      setGameData(generatedGameData);
-    }, []);
 
-    if (gameData.length === 0) return null;
-    const currentItem = gameData[currentIndex];
-    const parts = currentItem.collocation.split('___');
-
-    const handleTap = (selectedMeaning) => {
-      if (selectedMeaning === currentItem.meaning) {
-        setFeedback('correct');
-        setScore(prev => prev + 10);
-        playAudio(currentItem.word, null);
-        setTimeout(() => {
-          setFeedback(null);
-          setCurrentIndex((prev) => (prev + 1) % gameData.length);
-        }, 800);
-      } else {
-        setFeedback('wrong');
-        setTimeout(() => setFeedback(null), 600);
-      }
-    };
-
-    return (
-      <motion.div 
-        variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}
-        className="flex flex-col h-screen w-full mx-auto px-4 py-4 md:py-6 relative overflow-hidden z-10 max-w-5xl"
-      >
-        <AnimatePresence>
-          {feedback === 'wrong' && (
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-red-600/30 z-40 pointer-events-none rounded-3xl"
-            />
-          )}
-        </AnimatePresence>
-
-        <div className="flex justify-between items-center mb-4 z-50 relative w-full">
-          <BackButton />
-          <div className="font-black text-lg md:text-2xl text-purple-400 bg-slate-800/80 backdrop-blur-md border-2 border-purple-500/50 px-4 md:px-6 py-1 md:py-2 rounded-xl shadow-lg shadow-purple-500/20">
-            SCORE: {score}
-          </div>
-        </div>
-
-        {/* Mobile Friendly Layout: Question on top, Options below */}
-        <div className="flex flex-col flex-1 gap-4 md:gap-6 relative w-full pb-6">
-          
-          {/* Question Box */}
-          <div className={`w-full bg-slate-800/90 backdrop-blur-xl px-6 py-8 md:py-12 rounded-3xl shadow-xl text-center border-2 ${feedback === 'wrong' ? 'border-red-500' : 'border-purple-500/80'} transition-colors shrink-0 relative flex flex-col items-center justify-center min-h-[30%]`}>
-            <span className="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-1 rounded-full text-xs md:text-sm font-black uppercase tracking-widest border-2 bg-slate-900 text-purple-300 border-purple-500/80">
-              Collocation
-            </span>
-            
-            <h3 className="text-2xl md:text-5xl font-black text-white tracking-wider drop-shadow-lg flex items-center justify-center flex-wrap gap-x-2 md:gap-x-4 leading-tight">
-              {parts[0] && <span>{parts[0]}</span>}
-              <span className={`${posTextColors[currentItem.pos]} underline decoration-4 underline-offset-4 md:underline-offset-8`}>
-                {currentItem.word}
-              </span>
-              {parts[1] && <span>{parts[1]}</span>}
-            </h3>
-            
-            <p className="text-purple-300 mt-6 md:mt-10 text-xs md:text-base uppercase tracking-widest font-black bg-purple-900/40 px-4 py-2 md:py-3 rounded-xl border border-purple-500/30 w-max max-w-full">
-              What does the highlighted word mean?
-            </p>
-          </div>
-
-          {/* Options Grid (1 col on mobile, 2 cols on tablet/desktop) */}
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 z-20">
-            {currentItem.options.map((opt, i) => (
-              <button 
-                key={i}
-                onClick={() => handleTap(opt)}
-                className="w-full h-full min-h-[4rem] md:min-h-[6rem] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 rounded-2xl md:rounded-3xl shadow-lg border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-4 md:p-6 text-center text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all"
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-
-          <AnimatePresence>
-            {feedback === 'correct' && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-md z-30 rounded-3xl"
-              >
-                <CheckCircle2 className="w-32 h-32 md:w-56 md:h-56 text-green-500 drop-shadow-lg" />
-              </motion.div>
-            )}
-            {feedback === 'wrong' && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center bg-red-950/80 backdrop-blur-md z-30 rounded-3xl"
-              >
-                <XCircle className="w-32 h-32 md:w-56 md:h-56 text-red-500 drop-shadow-lg" />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
-    );
-  };
-
-  return (
-    <div className="h-screen w-full bg-slate-950 font-sans overflow-hidden selection:bg-cyan-500/30 relative">
-      <AnimatedBackground />
-      
-      {/* Soft Glow Backgrounds using standard Tailwind classes */}
-      <div className="fixed top-0 left-0 w-full max-w-2xl aspect-square bg-cyan-600/10 rounded-full blur-3xl pointer-events-none z-0 -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="fixed bottom-0 right-0 w-full max-w-2xl aspect-square bg-purple-600/10 rounded-full blur-3xl pointer-events-none z-0 translate-x-1/4 translate-y-1/4"></div>
-      
-      <div className="relative z-10 h-full overflow-y-auto overflow-x-hidden">
-        <AnimatePresence mode="wait">
-          {currentView === 'landing' && <LandingPage key="landing" />}
-          {currentView === 'flashcard' && <FlashcardView key="flashcard" />}
-          {currentView === 'falling' && <FallingWordsView key="falling" />}
-          {currentView === 'corners' && <FourCornersView key="corners" />}
-        </AnimatePresence>
-      </div>
-
-      <style dangerouslySetInnerHTML={{__html: `
+        /* 3D Flip Styles */
         .perspective-1000 { perspective: 1000px; }
-        .preserve-3d { transform-style: preserve-3d; }
+        .preserve-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
         .backface-hidden { backface-visibility: hidden; }
         .rotate-x-180 { transform: rotateX(180deg); }
-      `}} />
+        .is-flipped { transform: rotateX(180deg); }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.05; }
+            50% { transform: translateY(-100px) translateX(50px) rotate(10deg); opacity: 0.15; }
+        }
+        .floating-emoji {
+            position: absolute;
+            animation: float infinite linear;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+        }
+        .shake { animation: shake 0.4s ease-in-out; }
+
+        @keyframes fall {
+            from { top: -20%; }
+            to { top: 100%; }
+        }
+        .falling-word {
+            animation: fall linear forwards;
+        }
+
+        /* Hide scrollbar */
+        ::-webkit-scrollbar { display: none; }
+        
+        .view-section { display: none; }
+        .view-section.active { display: flex; }
+    </style>
+</head>
+<body class="h-screen w-full selection:bg-cyan-500/30 relative">
+
+    <!-- Background Effects -->
+    <div id="emoji-bg" class="fixed inset-0 overflow-hidden pointer-events-none z-0"></div>
+    <div class="fixed top-0 left-0 w-full max-w-2xl aspect-square bg-cyan-600/10 rounded-full blur-3xl pointer-events-none z-0 -translate-x-1/2 -translate-y-1/2"></div>
+    <div class="fixed bottom-0 right-0 w-full max-w-2xl aspect-square bg-purple-600/10 rounded-full blur-3xl pointer-events-none z-0 translate-x-1/4 translate-y-1/4"></div>
+
+    <div class="relative z-10 h-full overflow-y-auto overflow-x-hidden">
+
+        <!-- 1. Landing Page -->
+        <div id="view-landing" class="view-section active flex-col items-center justify-center min-h-screen w-full max-w-5xl mx-auto space-y-8 md:space-y-12 py-10 px-4">
+            <div class="text-center space-y-3 mt-8 md:mt-0">
+                <div class="inline-flex items-center justify-center p-3 md:p-4 bg-slate-800/80 rounded-2xl mb-2 md:mb-4 border border-cyan-500/30 shadow-lg shadow-cyan-500/20 backdrop-blur-md">
+                    <i data-lucide="gamepad-2" class="w-8 h-8 md:w-12 md:h-12 text-cyan-400"></i>
+                </div>
+                <h2 class="text-xl md:text-5xl font-black text-cyan-400 tracking-widest uppercase drop-shadow-md">Youth College</h2>
+                <h3 class="text-base md:text-2xl text-slate-300 font-bold mt-2 uppercase tracking-wide">Vocational English 2D</h3>
+                <h4 class="text-sm md:text-xl text-slate-400 font-bold tracking-wider">Integrated Assessment</h4>
+                <h1 class="text-4xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 mt-4 md:mt-6 drop-shadow-lg uppercase tracking-tight">Vocab Hub</h1>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl">
+                <button onclick="switchView('view-flashcard')" class="group relative overflow-hidden bg-slate-800/80 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-cyan-500/30 active:scale-95 transition-all text-left border-2 border-slate-700 hover:border-cyan-500 flex flex-col justify-center">
+                    <div class="flex items-center mb-2 md:mb-3">
+                        <div class="bg-slate-900 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-cyan-400 border border-slate-700 group-hover:bg-cyan-500/20 transition-colors mr-3 md:mr-4 shrink-0">
+                            <i data-lucide="book-open" class="w-5 h-5 md:w-6 md:h-6"></i>
+                        </div>
+                        <h2 class="text-xl md:text-3xl font-black text-slate-100 uppercase tracking-wide">Flash Cards</h2>
+                    </div>
+                    <p class="text-slate-400 text-sm md:text-base font-bold ml-14 md:ml-16">Learn pronunciation and meanings.</p>
+                </button>
+
+                <button onclick="switchView('view-falling')" class="group relative overflow-hidden bg-slate-800/80 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-emerald-500/30 active:scale-95 transition-all text-left border-2 border-slate-700 hover:border-emerald-500 flex flex-col justify-center">
+                    <div class="flex items-center mb-2 md:mb-3">
+                        <div class="bg-slate-900 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-emerald-400 border border-slate-700 group-hover:bg-emerald-500/20 transition-colors mr-3 md:mr-4 shrink-0">
+                            <i data-lucide="cloud-rain" class="w-5 h-5 md:w-6 md:h-6"></i>
+                        </div>
+                        <h2 class="text-xl md:text-3xl font-black text-slate-100 uppercase tracking-wide">Falling Words</h2>
+                    </div>
+                    <p class="text-slate-400 text-sm md:text-base font-bold ml-14 md:ml-16">Catch the correct meaning in time.</p>
+                </button>
+
+                <button onclick="switchView('view-corners')" class="group relative overflow-hidden bg-slate-800/80 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-purple-500/30 active:scale-95 transition-all text-left border-2 border-slate-700 hover:border-purple-500 flex flex-col justify-center">
+                    <div class="flex items-center mb-2 md:mb-3">
+                        <div class="bg-slate-900 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-purple-400 border border-slate-700 group-hover:bg-purple-500/20 transition-colors mr-3 md:mr-4 shrink-0">
+                            <i data-lucide="target" class="w-5 h-5 md:w-6 md:h-6"></i>
+                        </div>
+                        <h2 class="text-xl md:text-3xl font-black text-slate-100 uppercase tracking-wide">Four Corners</h2>
+                    </div>
+                    <p class="text-slate-400 text-sm md:text-base font-bold ml-14 md:ml-16">Guess the meaning of the phrase.</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. Flashcard View -->
+        <div id="view-flashcard" class="view-section flex-col h-screen w-full max-w-4xl mx-auto px-4 py-4 md:py-6 relative">
+            <button onclick="switchView('view-landing')" class="flex items-center text-slate-400 hover:text-cyan-400 mb-4 transition-colors bg-slate-800/80 px-4 py-2 rounded-full w-max backdrop-blur-md z-50 relative border border-slate-700 shadow-lg font-bold text-sm md:text-base">
+                <i data-lucide="arrow-left" class="w-4 h-4 md:w-5 md:h-5 mr-2"></i> BACK TO MENU
+            </button>
+            <div class="flex-1 flex flex-col items-center justify-center w-full pb-10">
+                <div id="fc-counter" class="text-cyan-400 mb-4 md:mb-6 font-black text-lg md:text-xl tracking-widest bg-slate-800/80 backdrop-blur-md px-4 md:px-6 py-2 rounded-full border border-slate-700 shadow-lg">1 / 39</div>
+                
+                <div class="relative w-full max-w-2xl h-80 md:h-96 perspective-1000">
+                    <div id="flashcard-inner" class="w-full h-full relative preserve-3d cursor-pointer" onclick="toggleFlashcard()">
+                        <!-- Front -->
+                        <div class="absolute inset-0 backface-hidden bg-slate-800/90 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col items-center justify-center border-2 border-slate-600 hover:border-cyan-500/80 transition-colors">
+                            <span id="fc-pos-front" class="absolute top-4 left-4 md:top-6 md:left-6 px-3 py-1 rounded-full text-xs md:text-sm font-black uppercase tracking-wider border-2">Pos</span>
+                            <button onclick="playFcAudio(event, 'word')" class="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 bg-slate-700 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-400 rounded-full transition-colors border border-slate-600">
+                                <i data-lucide="volume-2" class="w-5 h-5 md:w-6 md:h-6"></i>
+                            </button>
+                            <h2 id="fc-word" class="text-4xl md:text-7xl font-black text-slate-100 text-center tracking-wide drop-shadow-md break-words w-full px-4">Word</h2>
+                            <p class="text-cyan-500 mt-6 md:mt-10 text-xs md:text-base font-bold uppercase tracking-widest flex items-center bg-cyan-900/30 px-3 md:px-4 py-2 rounded-full">
+                                <i data-lucide="zap" class="w-4 h-4 md:w-5 md:h-5 mr-2"></i> Click to flip
+                            </p>
+                        </div>
+                        <!-- Back -->
+                        <div class="absolute inset-0 backface-hidden bg-gradient-to-br from-cyan-900/90 to-blue-900/90 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col items-center justify-center text-white rotate-x-180 border-2 border-cyan-500/80">
+                            <span id="fc-pos-back" class="absolute top-4 left-4 md:top-6 md:left-6 px-3 py-1 rounded-full text-xs md:text-sm font-black uppercase tracking-wider bg-black/30 text-cyan-300 border-2 border-cyan-500/30">Pos</span>
+                            <button onclick="playFcAudio(event, 'collocation')" class="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 bg-black/30 hover:bg-cyan-500/30 text-cyan-300 rounded-full transition-colors border border-cyan-500/30">
+                                <i data-lucide="volume-2" class="w-5 h-5 md:w-6 md:h-6"></i>
+                            </button>
+                            <h2 id="fc-meaning" class="text-3xl md:text-5xl font-black text-center drop-shadow-lg mb-4 md:mb-6">Meaning</h2>
+                            <p id="fc-collocation" class="text-lg md:text-3xl text-cyan-200 font-bold bg-black/40 px-4 md:px-8 py-3 md:py-4 rounded-2xl border border-cyan-500/30 shadow-inner text-center w-full">Collocation</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between w-full max-w-2xl mt-6 md:mt-10 gap-3 md:gap-6">
+                    <button onclick="prevCard()" id="btn-prev" class="flex-1 py-4 md:py-5 bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-black text-base md:text-xl text-slate-300 transition-colors border-2 border-slate-600 shadow-lg uppercase tracking-wider">PREV</button>
+                    <button onclick="nextCard()" id="btn-next" class="flex-1 py-4 md:py-5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl font-black text-base md:text-xl text-white shadow-lg shadow-cyan-500/50 transition-all uppercase tracking-wider">NEXT</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Falling Words -->
+        <div id="view-falling" class="view-section flex-col h-screen w-full max-w-4xl mx-auto px-4 py-4 md:py-6 relative">
+            <div id="fw-shake-overlay" class="absolute inset-0 bg-red-600/20 z-50 pointer-events-none rounded-3xl hidden"></div>
+            
+            <div class="flex justify-between items-center mb-2 md:mb-4 z-10">
+                <button onclick="switchView('view-landing')" class="flex items-center text-slate-400 hover:text-cyan-400 transition-colors bg-slate-800/80 px-4 py-2 rounded-full w-max backdrop-blur-md border border-slate-700 shadow-lg font-bold text-sm md:text-base">
+                    <i data-lucide="arrow-left" class="w-4 h-4 md:w-5 md:h-5 mr-2"></i> BACK
+                </button>
+                <div class="flex items-center space-x-3 md:space-x-6">
+                    <div class="flex space-x-1 md:space-x-2" id="fw-lives">
+                        <!-- Lives injected here -->
+                    </div>
+                    <div id="fw-score" class="font-black text-lg md:text-2xl text-emerald-400 bg-slate-800/80 backdrop-blur-md border-2 border-emerald-500/50 px-3 md:px-6 py-1 md:py-2 rounded-xl shadow-lg shadow-emerald-500/20">0</div>
+                </div>
+            </div>
+
+            <div class="flex-1 relative bg-slate-900/60 backdrop-blur-sm rounded-3xl border-2 border-slate-700 overflow-hidden mb-3 md:mb-4 shadow-inner" id="fw-game-area">
+                <div id="fw-falling-word" class="absolute left-0 right-0 mx-auto w-11/12 md:w-max bg-slate-800/90 backdrop-blur-md px-6 md:px-10 py-4 md:py-5 rounded-2xl shadow-lg shadow-emerald-500/40 text-3xl md:text-6xl font-black text-emerald-400 border-2 border-emerald-500/80 z-10 text-center break-words hidden">Word</div>
+                
+                <div id="fw-game-over" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-20 flex-col items-center justify-center text-white px-4 text-center hidden">
+                    <h2 class="text-5xl md:text-7xl font-black mb-2 md:mb-4 text-red-500 drop-shadow-lg">GAME OVER</h2>
+                    <p class="text-2xl md:text-4xl mb-8 md:mb-10 text-slate-300 font-bold">Score: <span id="fw-final-score" class="text-emerald-400 font-black">0</span></p>
+                    <button onclick="startFallingGame()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-8 md:px-12 py-4 md:py-5 rounded-2xl font-black text-xl md:text-3xl shadow-lg shadow-emerald-500/50 transition-transform active:scale-95 uppercase tracking-wider w-full max-w-xs">PLAY AGAIN</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-2 gap-2 md:gap-4 shrink-0 z-10 pb-4 md:pb-0" id="fw-options">
+                <!-- Options injected here -->
+            </div>
+        </div>
+
+        <!-- 4. Four Corners -->
+        <div id="view-corners" class="view-section flex-col h-screen w-full mx-auto px-4 py-4 md:py-6 relative overflow-hidden max-w-6xl">
+            <div id="fc-wrong-overlay" class="absolute inset-0 bg-red-600/30 z-40 pointer-events-none rounded-3xl hidden"></div>
+            
+            <div class="flex justify-between items-center mb-4 z-50 relative w-full">
+                <button onclick="switchView('view-landing')" class="flex items-center text-slate-400 hover:text-cyan-400 transition-colors bg-slate-800/80 px-4 py-2 rounded-full w-max backdrop-blur-md border border-slate-700 shadow-lg font-bold text-sm md:text-base">
+                    <i data-lucide="arrow-left" class="w-4 h-4 md:w-5 md:h-5 mr-2"></i> BACK
+                </button>
+                <div id="4c-score" class="font-black text-lg md:text-2xl text-purple-400 bg-slate-800/80 backdrop-blur-md border-2 border-purple-500/50 px-4 md:px-6 py-1 md:py-2 rounded-xl shadow-lg shadow-purple-500/20">SCORE: 0</div>
+            </div>
+
+            <!-- 真正嘅 Four Corners 容器 -->
+            <div class="flex-1 relative w-full h-full pb-6" id="4c-container">
+                
+                <!-- 中間嘅題目框 (Center Question Box) -->
+                <div id="4c-center-box" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 w-[85%] md:w-[50%] max-w-2xl bg-slate-800/95 backdrop-blur-xl px-4 py-8 md:px-8 md:py-12 rounded-3xl shadow-2xl text-center border-2 border-purple-500/80 shadow-purple-500/20 transition-colors flex flex-col items-center justify-center">
+                    <span class="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2 px-4 md:px-6 py-1 rounded-full text-xs md:text-sm font-black uppercase tracking-widest border-2 bg-slate-900 text-purple-300 border-purple-500/80 shadow-lg">
+                        Collocation
+                    </span>
+                    <h3 id="4c-question" class="text-2xl md:text-5xl font-black text-white tracking-wider drop-shadow-lg flex items-center justify-center flex-wrap gap-x-2 md:gap-x-4 leading-tight">
+                        <!-- Injected -->
+                    </h3>
+                    <p class="text-purple-300 mt-6 md:mt-10 text-xs md:text-sm md:text-base uppercase tracking-widest font-black bg-purple-900/40 px-4 py-2 md:py-3 rounded-xl border border-purple-500/30 w-max max-w-full">
+                        What does the highlighted word mean?
+                    </p>
+                </div>
+
+                <!-- 四個角落嘅選項 (Four Corners Options) -->
+                <button onclick="handle4CTap(0)" id="4c-btn-0" class="absolute top-0 left-0 rounded-br-3xl rounded-tl-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-sm sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20 leading-tight"></button>
+                <button onclick="handle4CTap(1)" id="4c-btn-1" class="absolute top-0 right-0 rounded-bl-3xl rounded-tr-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-sm sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20 leading-tight"></button>
+                <button onclick="handle4CTap(2)" id="4c-btn-2" class="absolute bottom-0 left-0 rounded-tr-3xl rounded-bl-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-sm sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20 leading-tight"></button>
+                <button onclick="handle4CTap(3)" id="4c-btn-3" class="absolute bottom-0 right-0 rounded-tl-3xl rounded-br-xl md:rounded-3xl w-[48%] md:w-[40%] max-w-sm h-[22%] md:h-[28%] bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 shadow-xl border-2 border-slate-600 hover:border-purple-500/80 flex items-center justify-center p-2 md:p-6 text-center text-sm sm:text-lg md:text-3xl font-black text-slate-100 active:bg-purple-900 active:scale-95 transition-all z-20 leading-tight"></button>
+
+                <!-- Feedback Icons -->
+                <div id="4c-correct-icon" class="absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-md z-40 rounded-3xl hidden">
+                    <i data-lucide="check-circle-2" class="w-32 h-32 md:w-56 md:h-56 text-green-500 drop-shadow-lg"></i>
+                </div>
+                <div id="4c-wrong-icon" class="absolute inset-0 flex items-center justify-center z-40 hidden">
+                    <i data-lucide="x-circle" class="w-32 h-32 md:w-56 md:h-56 text-red-500 drop-shadow-lg opacity-80"></i>
+                </div>
+            </div>
+        </div>
+
     </div>
-  );
-}
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // --- Data ---
+        const rawVocabData = [
+            { word: "affect", pos: "Verb", meaning: "影響", collocation: "___ the outcome" },
+            { word: "collect", pos: "Verb", meaning: "收集", collocation: "___ data" },
+            { word: "demonstrate", pos: "Verb", meaning: "示範 / 證明", collocation: "___ how to use" },
+            { word: "gather", pos: "Verb", meaning: "聚集 / 收集", collocation: "___ information" },
+            { word: "improve", pos: "Verb", meaning: "改善", collocation: "___ performance" },
+            { word: "induce", pos: "Verb", meaning: "引起 / 導致", collocation: "___ sleep" },
+            { word: "obtain", pos: "Verb", meaning: "獲得", collocation: "___ permission" },
+            { word: "provide", pos: "Verb", meaning: "提供", collocation: "___ support" },
+            { word: "reduce", pos: "Verb", meaning: "減少", collocation: "___ stress" },
+            { word: "recharge", pos: "Verb", meaning: "充電", collocation: "___ the battery" },
+            { word: "require", pos: "Verb", meaning: "需要", collocation: "___ assistance" },
+            { word: "lower", pos: "Verb", meaning: "降低", collocation: "___ the temperature" },
+            { word: "battery", pos: "Noun", meaning: "電池", collocation: "charge the ___" },
+            { word: "concern", pos: "Noun", meaning: "關注 / 擔憂", collocation: "express ___" },
+            { word: "construction", pos: "Noun", meaning: "建設 / 建築", collocation: "under ___" },
+            { word: "coordination", pos: "Noun", meaning: "協調", collocation: "hand-eye ___" },
+            { word: "delay", pos: "Noun", meaning: "延遲", collocation: "cause a ___" },
+            { word: "difficulty", pos: "Noun", meaning: "困難", collocation: "experience ___" },
+            // UPDATED: "expense" meaning changed to "代價 / 費用"
+            { word: "expense", pos: "Noun", meaning: "代價 / 費用", collocation: "at the ___ of" },
+            { word: "exposure", pos: "Noun", meaning: "暴露 / 接觸", collocation: "sun ___" },
+            { word: "facility", pos: "Noun", meaning: "設施", collocation: "sports ___" },
+            { word: "feedback", pos: "Noun", meaning: "反饋 / 意見", collocation: "give ___" },
+            { word: "implementation", pos: "Noun", meaning: "實施 / 執行", collocation: "___ of the plan" },
+            { word: "maintenance", pos: "Noun", meaning: "維修 / 保養", collocation: "regular ___" },
+            { word: "relief", pos: "Noun", meaning: "緩解 / 減輕", collocation: "pain ___" },
+            { word: "solution", pos: "Noun", meaning: "解決方案", collocation: "find a ___" },
+            { word: "supervision", pos: "Noun", meaning: "監督", collocation: "under adult ___" },
+            { word: "temperature", pos: "Noun", meaning: "溫度", collocation: "high ___" },
+            { word: "usage", pos: "Noun", meaning: "使用量", collocation: "water ___" },
+            { word: "additional", pos: "Adjective", meaning: "額外的", collocation: "___ information" },
+            { word: "applicable", pos: "Adjective", meaning: "適用的", collocation: "___ to everyone" },
+            { word: "effective in", pos: "Adjective", meaning: "在...有效", collocation: "___ reducing pain" },
+            { word: "frequent", pos: "Adjective", meaning: "頻繁的", collocation: "___ breaks" },
+            { word: "helpful in", pos: "Adjective", meaning: "在...有幫助", collocation: "___ solving problems" },
+            { word: "immediate", pos: "Adjective", meaning: "立即的", collocation: "___ action" },
+            { word: "initial", pos: "Adjective", meaning: "最初的", collocation: "___ stage" },
+            { word: "ongoing", pos: "Adjective", meaning: "進行中的", collocation: "___ process" },
+            { word: "significantly", pos: "Adverb", meaning: "顯著地", collocation: "improve ___" },
+            { word: "greatly", pos: "Adverb", meaning: "大大地", collocation: "___ appreciate" }
+        ];
+
+        const posColors = {
+            Verb: "bg-red-500/20 text-red-400 border-red-500/50",
+            Noun: "bg-blue-500/20 text-blue-400 border-blue-500/50",
+            Adjective: "bg-emerald-500/20 text-emerald-400 border-emerald-500/50",
+            Adverb: "bg-amber-500/20 text-amber-400 border-amber-500/50"
+        };
+        const posTextColors = {
+            Verb: "text-red-400",
+            Noun: "text-blue-400",
+            Adjective: "text-emerald-400",
+            Adverb: "text-amber-400"
+        };
+
+        // --- Audio ---
+        function playAudio(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- Background Emojis ---
+        function initBackground() {
+            const emojis = ['📚', '🎯', '💡', '🎓', '✨', '🚀', '📝', '🧠', '🧩', '🏆', '⭐', '🔥'];
+            const container = document.getElementById('emoji-bg');
+            for(let i=0; i<15; i++) {
+                const el = document.createElement('div');
+                el.className = 'floating-emoji text-2xl md:text-4xl';
+                el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                el.style.left = Math.random() * 100 + '%';
+                el.style.top = Math.random() * 100 + '%';
+                el.style.animationDuration = (Math.random() * 20 + 15) + 's';
+                el.style.animationDelay = (Math.random() * -20) + 's';
+                container.appendChild(el);
+            }
+        }
+        initBackground();
+
+        // --- Navigation ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+
+            if(viewId === 'view-flashcard') initFlashcards();
+            if(viewId === 'view-falling') startFallingGame();
+            if(viewId === 'view-corners') start4CGame();
+        }
+
+        // --- Flashcards Logic ---
+        let fcIndex = 0;
+        let fcFlipped = false;
+
+        function initFlashcards() {
+            fcIndex = 0;
+            fcFlipped = false;
+            updateFlashcardUI();
+        }
+
+        function updateFlashcardUI() {
+            const word = rawVocabData[fcIndex];
+            document.getElementById('fc-counter').innerText = `${fcIndex + 1} / ${rawVocabData.length}`;
+            
+            document.getElementById('fc-pos-front').className = `absolute top-4 left-4 md:top-6 md:left-6 px-3 py-1 rounded-full text-xs md:text-sm font-black uppercase tracking-wider border-2 ${posColors[word.pos]}`;
+            document.getElementById('fc-pos-front').innerText = word.pos;
+            document.getElementById('fc-word').innerText = word.word;
+            
+            document.getElementById('fc-pos-back').innerText = word.pos;
+            document.getElementById('fc-meaning').innerText = word.meaning;
+            document.getElementById('fc-collocation').innerText = word.collocation.replace('___', word.word);
+
+            document.getElementById('btn-prev').disabled = fcIndex === 0;
+            document.getElementById('btn-next').disabled = fcIndex === rawVocabData.length - 1;
+
+            const inner = document.getElementById('flashcard-inner');
+            if(fcFlipped) {
+                inner.classList.add('is-flipped');
+            } else {
+                inner.classList.remove('is-flipped');
+                playAudio(word.word);
+            }
+        }
+
+        function toggleFlashcard() {
+            fcFlipped = !fcFlipped;
+            const word = rawVocabData[fcIndex];
+            if(fcFlipped) playAudio(word.collocation.replace('___', word.word));
+            else playAudio(word.word);
+            updateFlashcardUI();
+        }
+
+        function playFcAudio(e, type) {
+            e.stopPropagation();
+            const word = rawVocabData[fcIndex];
+            if(type === 'word') playAudio(word.word);
+            else playAudio(word.collocation.replace('___', word.word));
+        }
+
+        function prevCard() { if(fcIndex > 0) { fcIndex--; fcFlipped = false; updateFlashcardUI(); } }
+        function nextCard() { if(fcIndex < rawVocabData.length - 1) { fcIndex++; fcFlipped = false; updateFlashcardUI(); } }
+
+
+        // --- Falling Words Logic ---
+        let fwScore = 0;
+        let fwLives = 3;
+        let fwCurrentWord = null;
+        let fwOptions = [];
+        let fwFallTimer = null;
+        let fwIsGameOver = false;
+
+        function startFallingGame() {
+            fwScore = 0;
+            fwLives = 3;
+            fwIsGameOver = false;
+            document.getElementById('fw-game-over').classList.add('hidden');
+            document.getElementById('fw-game-over').classList.remove('flex');
+            document.getElementById('fw-falling-word').classList.remove('hidden');
+            updateFwUI();
+            spawnFwWord();
+        }
+
+        function updateFwUI() {
+            document.getElementById('fw-score').innerText = fwScore;
+            let livesHtml = '';
+            for(let i=0; i<3; i++) {
+                if(i < fwLives) livesHtml += `<i data-lucide="heart" class="w-5 h-5 md:w-8 md:h-8 text-emerald-500 fill-emerald-500 drop-shadow-md"></i>`;
+                else livesHtml += `<i data-lucide="heart" class="w-5 h-5 md:w-8 md:h-8 text-slate-700"></i>`;
+            }
+            document.getElementById('fw-lives').innerHTML = livesHtml;
+            lucide.createIcons();
+        }
+
+        function spawnFwWord() {
+            if(fwIsGameOver) return;
+            fwCurrentWord = rawVocabData[Math.floor(Math.random() * rawVocabData.length)];
+            
+            let opts = new Set([fwCurrentWord.meaning]);
+            while(opts.size < 4) {
+                opts.add(rawVocabData[Math.floor(Math.random() * rawVocabData.length)].meaning);
+            }
+            fwOptions = Array.from(opts).sort(() => Math.random() - 0.5);
+
+            const wordEl = document.getElementById('fw-falling-word');
+            wordEl.innerText = fwCurrentWord.word;
+            
+            let optsHtml = '';
+            fwOptions.forEach((opt, i) => {
+                optsHtml += `<button onclick="handleFwSelect('${opt}')" class="bg-slate-800/80 backdrop-blur-md hover:bg-slate-700 rounded-2xl shadow-lg border-2 border-slate-600 hover:border-emerald-500/80 flex items-center justify-center p-3 md:p-6 text-center text-sm md:text-2xl font-black text-slate-100 active:bg-emerald-900 active:scale-95 transition-all min-h-[4rem] md:min-h-[6rem] leading-tight">${opt}</button>`;
+            });
+            document.getElementById('fw-options').innerHTML = optsHtml;
+
+            // Reset animation
+            wordEl.style.animation = 'none';
+            void wordEl.offsetWidth; // trigger reflow
+            const duration = Math.max(2.5, 6 - Math.floor(fwScore / 30) * 0.5);
+            wordEl.style.animation = `fall ${duration}s linear forwards`;
+
+            clearTimeout(fwFallTimer);
+            fwFallTimer = setTimeout(() => {
+                handleFwMiss();
+            }, duration * 1000);
+        }
+
+        function triggerFwShake() {
+            const overlay = document.getElementById('fw-shake-overlay');
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.add('hidden'), 400);
+        }
+
+        function handleFwSelect(selected) {
+            if(fwIsGameOver) return;
+            clearTimeout(fwFallTimer);
+            if(selected === fwCurrentWord.meaning) {
+                fwScore += 10;
+                playAudio(fwCurrentWord.word);
+                updateFwUI();
+                spawnFwWord();
+            } else {
+                triggerFwShake();
+                fwLives--;
+                updateFwUI();
+                if(fwLives <= 0) endFwGame();
+                else spawnFwWord();
+            }
+        }
+
+        function handleFwMiss() {
+            if(fwIsGameOver) return;
+            triggerFwShake();
+            fwLives--;
+            updateFwUI();
+            if(fwLives <= 0) endFwGame();
+            else spawnFwWord();
+        }
+
+        function endFwGame() {
+            fwIsGameOver = true;
+            document.getElementById('fw-falling-word').classList.add('hidden');
+            document.getElementById('fw-game-over').classList.remove('hidden');
+            document.getElementById('fw-game-over').classList.add('flex');
+            document.getElementById('fw-final-score').innerText = fwScore;
+            document.getElementById('fw-options').innerHTML = '';
+        }
+
+
+        // --- Four Corners Logic ---
+        let c4Data = [];
+        let c4Index = 0;
+        let c4Score = 0;
+        let c4CurrentItem = null;
+
+        function start4CGame() {
+            c4Score = 0;
+            c4Index = 0;
+            document.getElementById('4c-score').innerText = `SCORE: ${c4Score}`;
+            
+            let shuffled = [...rawVocabData].sort(() => Math.random() - 0.5);
+            c4Data = shuffled.map(item => {
+                let opts = new Set([item.meaning]);
+                while(opts.size < 4) {
+                    opts.add(rawVocabData[Math.floor(Math.random() * rawVocabData.length)].meaning);
+                }
+                return { ...item, options: Array.from(opts).sort(() => Math.random() - 0.5) };
+            });
+            
+            load4CQuestion();
+        }
+
+        function load4CQuestion() {
+            c4CurrentItem = c4Data[c4Index];
+            const parts = c4CurrentItem.collocation.split('___');
+            
+            let qHtml = '';
+            if(parts[0]) qHtml += `<span>${parts[0]}</span>`;
+            qHtml += `<span class="${posTextColors[c4CurrentItem.pos]} underline decoration-4 underline-offset-4 md:underline-offset-8">${c4CurrentItem.word}</span>`;
+            if(parts[1]) qHtml += `<span>${parts[1]}</span>`;
+            
+            document.getElementById('4c-question').innerHTML = qHtml;
+
+            for(let i=0; i<4; i++) {
+                document.getElementById(`4c-btn-${i}`).innerText = c4CurrentItem.options[i];
+            }
+        }
+
+        function handle4CTap(optIndex) {
+            const selected = c4CurrentItem.options[optIndex];
+            if(selected === c4CurrentItem.meaning) {
+                c4Score += 10;
+                document.getElementById('4c-score').innerText = `SCORE: ${c4Score}`;
+                playAudio(c4CurrentItem.word);
+                
+                document.getElementById('4c-correct-icon').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('4c-correct-icon').classList.add('hidden');
+                    c4Index = (c4Index + 1) % c4Data.length;
+                    load4CQuestion();
+                }, 800);
+            } else {
+                document.getElementById('fc-wrong-overlay').classList.remove('hidden');
+                document.getElementById('4c-wrong-icon').classList.remove('hidden');
+                document.getElementById('4c-center-box').classList.add('border-red-500', 'shadow-red-500/50');
+                document.getElementById('4c-center-box').classList.remove('border-purple-500/80', 'shadow-purple-500/20');
+                
+                setTimeout(() => {
+                    document.getElementById('fc-wrong-overlay').classList.add('hidden');
+                    document.getElementById('4c-wrong-icon').classList.add('hidden');
+                    document.getElementById('4c-center-box').classList.remove('border-red-500', 'shadow-red-500/50');
+                    document.getElementById('4c-center-box').classList.add('border-purple-500/80', 'shadow-purple-500/20');
+                }, 600);
+            }
+        }
+    </script>
+</body>
+</html>
