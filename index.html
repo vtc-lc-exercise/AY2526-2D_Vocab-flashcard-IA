@@ -288,7 +288,7 @@
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'en-UK';
+                utterance.lang = 'en-GB';
                 utterance.rate = 0.85;
                 window.speechSynthesis.speak(utterance);
             }
