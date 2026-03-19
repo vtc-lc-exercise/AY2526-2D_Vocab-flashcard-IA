@@ -129,7 +129,8 @@
                             <button onclick="playFcAudio(event, 'word')" class="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 bg-slate-700 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-400 rounded-full transition-colors border border-slate-600">
                                 <i data-lucide="volume-2" class="w-5 h-5 md:w-6 md:h-6"></i>
                             </button>
-                            <h2 id="fc-word" class="text-3xl md:text-5xl font-black text-slate-100 text-center tracking-wide drop-shadow-md break-words w-full px-4">Word</h2>
+                            <!-- 已修正字體大小，防止 implementation 跌落下一行 -->
+                            <h2 id="fc-word" class="text-3xl md:text-5xl lg:text-6xl font-black text-slate-100 text-center tracking-wide drop-shadow-md w-full px-4">Word</h2>
                             <p class="text-cyan-500 mt-6 md:mt-10 text-xs md:text-base font-bold uppercase tracking-widest flex items-center bg-cyan-900/30 px-3 md:px-4 py-2 rounded-full">
                                 <i data-lucide="zap" class="w-4 h-4 md:w-5 md:h-5 mr-2"></i> Click to flip
                             </p>
@@ -372,8 +373,37 @@
             else playAudio(word.collocation.replace('___', word.word));
         }
 
-        function prevCard() { if(fcIndex > 0) { fcIndex--; fcFlipped = false; updateFlashcardUI(); } }
-        function nextCard() { if(fcIndex < rawVocabData.length - 1) { fcIndex++; fcFlipped = false; updateFlashcardUI(); } }
+        // 新增嘅 Function：暫時熄動畫，強制彈返去正面先轉字
+        function snapToFrontAndUpdate() {
+            fcFlipped = false;
+            const inner = document.getElementById('flashcard-inner');
+            
+            // 暫時取消 CSS 動畫
+            inner.style.transition = 'none';
+            inner.classList.remove('is-flipped');
+            
+            // 強制瀏覽器即刻刷新畫面 (Reflow)
+            void inner.offsetWidth;
+            
+            // 開返 CSS 動畫
+            inner.style.transition = '';
+            
+            updateFlashcardUI();
+        }
+
+        function prevCard() { 
+            if(fcIndex > 0) { 
+                fcIndex--; 
+                snapToFrontAndUpdate(); 
+            } 
+        }
+        
+        function nextCard() { 
+            if(fcIndex < rawVocabData.length - 1) { 
+                fcIndex++; 
+                snapToFrontAndUpdate(); 
+            } 
+        }
 
 
         // --- Falling Words Logic ---
